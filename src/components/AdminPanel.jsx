@@ -16,7 +16,14 @@ const AdminPanel = ({
   onRemoveLocation,
   onDeleteSession
 }) => {
-  const [activeTab, setActiveTab] = useState('sessions');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('adminActiveTab') || 'sessions';
+  });
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem('adminActiveTab', tab);
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
@@ -35,19 +42,19 @@ const AdminPanel = ({
           {/* Tabs */}
           <div className="flex gap-2">
             <button
-              onClick={() => setActiveTab('sessions')}
+              onClick={() => handleTabChange('sessions')}
               className={`px-5 py-2.5 ${activeTab === 'sessions' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
             >
               Sessions
             </button>
             <button
-              onClick={() => setActiveTab('players')}
+              onClick={() => handleTabChange('players')}
               className={`px-5 py-2.5 ${activeTab === 'players' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
             >
               Players
             </button>
             <button
-              onClick={() => setActiveTab('locations')}
+              onClick={() => handleTabChange('locations')}
               className={`px-5 py-2.5 ${activeTab === 'locations' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
             >
               Locations
