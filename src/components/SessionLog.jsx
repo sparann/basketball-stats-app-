@@ -12,14 +12,14 @@ const SessionLog = ({ sessions }) => {
   // Sort sessions by date (newest first)
   const sortedSessions = [...sessions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  const getTopPerformer = (session) => {
+  const getTopPerformers = (session) => {
     const playersWithWinRate = session.players.map(p => ({
       ...p,
       winPercentage: calculateWinPercentage(p.gamesWon, p.gamesPlayed)
     }));
-    return playersWithWinRate.reduce((top, player) =>
-      player.winPercentage > top.winPercentage ? player : top
-    );
+
+    const maxWinPercentage = Math.max(...playersWithWinRate.map(p => p.winPercentage));
+    return playersWithWinRate.filter(p => p.winPercentage === maxWinPercentage);
   };
 
   const getGradientColor = (color) => {
@@ -38,8 +38,8 @@ const SessionLog = ({ sessions }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sortedSessions.map((session) => {
           const totalGames = session.players.reduce((sum, p) => sum + p.gamesPlayed, 0);
-          const topPerformer = getTopPerformer(session);
-          const topPerformerColor = getWinPercentageColor(topPerformer.winPercentage);
+          const topPerformers = getTopPerformers(session);
+          const topPerformerColor = getWinPercentageColor(topPerformers[0].winPercentage);
 
           return (
             <div
@@ -73,10 +73,16 @@ const SessionLog = ({ sessions }) => {
                 </div>
 
                 <div className="pt-4 border-t border-slate-200">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Top Performer</p>
-                  <p className={`text-lg font-bold bg-gradient-to-r ${getGradientColor(topPerformerColor)} bg-clip-text text-transparent`}>
-                    {topPerformer.name}
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                    {topPerformers.length > 1 ? 'Top Performers (Tie)' : 'Top Performer'}
                   </p>
+                  <div className="space-y-1">
+                    {topPerformers.map((performer, index) => (
+                      <p key={index} className={`text-lg font-bold bg-gradient-to-r ${getGradientColor(topPerformerColor)} bg-clip-text text-transparent`}>
+                        {performer.name}
+                      </p>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

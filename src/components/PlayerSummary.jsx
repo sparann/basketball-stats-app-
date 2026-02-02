@@ -46,6 +46,24 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
 
   const sortedPlayers = sortPlayers(filteredPlayerStats, sortBy);
 
+  // Calculate ranks with tie handling
+  const playersWithRanks = useMemo(() => {
+    let currentRank = 1;
+    return sortedPlayers.map((player, index) => {
+      if (index > 0) {
+        const prevPlayer = sortedPlayers[index - 1];
+        const isTied = sortBy === 'winPercentage'
+          ? player.overallWinPercentage === prevPlayer.overallWinPercentage
+          : player.totalGamesPlayed === prevPlayer.totalGamesPlayed;
+
+        if (!isTied) {
+          currentRank = index + 1;
+        }
+      }
+      return { ...player, rank: currentRank };
+    });
+  }, [sortedPlayers, sortBy]);
+
   const handleToggleInjured = () => {
     if (selectedPlayer && onUpdatePlayer) {
       onUpdatePlayer({
@@ -123,11 +141,11 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedPlayers.map((player, index) => (
+        {playersWithRanks.map((player) => (
           <PlayerCard
             key={player.name}
             player={player}
-            rank={index + 1}
+            rank={player.rank}
             onClick={() => setSelectedPlayer(player)}
           />
         ))}
