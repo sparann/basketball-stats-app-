@@ -40,38 +40,49 @@ function App() {
 
     try {
       if (isSupabaseConfigured()) {
-        // Fetch from Supabase
-        const { data, error } = await supabase
-          .from('sessions')
-          .select('*')
-          .order('date', { ascending: true });
+        // Fetch both players and sessions from Supabase
+        const [playersResult, sessionsResult] = await Promise.all([
+          supabase.from('players').select('*').order('name', { ascending: true }),
+          supabase.from('sessions').select('*').order('date', { ascending: true })
+        ]);
 
-        if (error) throw error;
+        if (playersResult.error) throw playersResult.error;
+        if (sessionsResult.error) throw sessionsResult.error;
 
-        if (data && data.length > 0) {
-          setSessions(data);
-          const aggregated = aggregatePlayerStats(data);
-          const withExtras = aggregated.map(player => ({
-            ...player,
+        const sessionsData = sessionsResult.data || [];
+        const playersData = playersResult.data || [];
+
+        setSessions(sessionsData);
+
+        // Calculate stats from sessions
+        const sessionStats = aggregatePlayerStats(sessionsData);
+        const sessionStatsMap = {};
+        sessionStats.forEach(player => {
+          sessionStatsMap[player.name] = player;
+        });
+
+        // Merge players table with session stats
+        const allPlayers = playersData.map(player => {
+          const stats = sessionStatsMap[player.name] || {
+            totalGamesPlayed: 0,
+            totalGamesWon: 0,
+            sessionsAttended: 0,
+            overallWinPercentage: 0,
+            lastPlayed: null,
+            sessions: []
+          };
+
+          return {
+            name: player.name,
+            ...stats,
             injured: injuredPlayers[player.name] || false,
             pictureUrl: playerPictures[player.name] || '',
             height: playerDetails[player.name]?.height || '',
             weight: playerDetails[player.name]?.weight || ''
-          }));
-          setPlayerStats(withExtras);
-        } else {
-          // No data in Supabase, use fallback
-          setSessions(statsData.sessions);
-          const aggregated = aggregatePlayerStats(statsData.sessions);
-          const withExtras = aggregated.map(player => ({
-            ...player,
-            injured: injuredPlayers[player.name] || false,
-            pictureUrl: playerPictures[player.name] || '',
-            height: playerDetails[player.name]?.height || '',
-            weight: playerDetails[player.name]?.weight || ''
-          }));
-          setPlayerStats(withExtras);
-        }
+          };
+        });
+
+        setPlayerStats(allPlayers);
       } else {
         // Use local JSON data (for development)
         setSessions(statsData.sessions);
@@ -203,7 +214,15 @@ function App() {
   const handleDeletePlayer = async (playerName) => {
     try {
       if (isSupabaseConfigured()) {
-        // Get all sessions
+        // Delete from players table
+        const { error: playerError } = await supabase
+          .from('players')
+          .delete()
+          .eq('name', playerName);
+
+        if (playerError) throw playerError;
+
+        // Get all sessions and remove this player from them
         const { data: allSessions, error: fetchError } = await supabase
           .from('sessions')
           .select('*');

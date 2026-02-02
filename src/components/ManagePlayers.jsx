@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import EditPlayerModal from './EditPlayerModal';
 
 const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
@@ -6,25 +7,38 @@ const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
 
-  const handleAddPlayer = () => {
+  const handleAddPlayer = async () => {
     if (newPlayerName.trim()) {
-      if (onUpdatePlayer) {
-        onUpdatePlayer({
-          name: newPlayerName.trim(),
-          pictureUrl: '',
-          injured: false,
-          height: '',
-          weight: '',
-          totalGamesPlayed: 0,
-          totalGamesWon: 0,
-          sessionsAttended: 0,
-          overallWinPercentage: 0,
-          lastPlayed: new Date().toISOString().split('T')[0],
-          sessions: []
-        });
+      try {
+        if (isSupabaseConfigured()) {
+          const { error } = await supabase
+            .from('players')
+            .insert([{ name: newPlayerName.trim() }]);
+
+          if (error) throw error;
+        }
+
+        if (onUpdatePlayer) {
+          onUpdatePlayer({
+            name: newPlayerName.trim(),
+            pictureUrl: '',
+            injured: false,
+            height: '',
+            weight: '',
+            totalGamesPlayed: 0,
+            totalGamesWon: 0,
+            sessionsAttended: 0,
+            overallWinPercentage: 0,
+            lastPlayed: null,
+            sessions: []
+          });
+        }
+        setNewPlayerName('');
+        setShowAddPlayer(false);
+      } catch (error) {
+        console.error('Error adding player:', error);
+        alert(`Failed to add player: ${error.message}`);
       }
-      setNewPlayerName('');
-      setShowAddPlayer(false);
     }
   };
 
