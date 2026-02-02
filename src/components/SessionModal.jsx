@@ -23,6 +23,7 @@ const SessionModal = ({ session, onClose }) => {
   const getGradientColor = (color) => {
     if (color === 'success') return 'from-green-600 to-emerald-600';
     if (color === 'warning') return 'from-amber-600 to-orange-600';
+    if (color === 'default') return 'from-slate-600 to-slate-600';
     return 'from-blue-600 to-indigo-600';
   };
 
@@ -87,7 +88,7 @@ const SessionModal = ({ session, onClose }) => {
           <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4">Player Performance</h3>
           <div className="space-y-3">
             {playersWithWinRate.map((player, index) => {
-              const playerColor = getWinPercentageColor(player.winPercentage);
+              const playerColor = getWinPercentageColor(player.winPercentage, player.gamesPlayed);
               const isTopPerformer = player.name === topPerformer.name;
 
               return (
@@ -116,7 +117,7 @@ const SessionModal = ({ session, onClose }) => {
                     </div>
                   </div>
                   <div className={`text-2xl font-bold bg-gradient-to-r ${getGradientColor(playerColor)} bg-clip-text text-transparent`}>
-                    {formatWinPercentage(player.winPercentage)}
+                    {formatWinPercentage(player.winPercentage, player.gamesPlayed)}
                   </div>
                 </div>
               );

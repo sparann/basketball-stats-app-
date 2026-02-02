@@ -6,24 +6,27 @@ import {
 } from '../utils/calculations';
 
 const PlayerCard = ({ player, rank, onClick }) => {
-  const winPercentageColor = getWinPercentageColor(player.overallWinPercentage);
+  const winPercentageColor = getWinPercentageColor(player.overallWinPercentage, player.totalGamesPlayed);
   const isActive = isPlayerActive(player.lastPlayed);
 
   const getGradientColor = (color) => {
     if (color === 'success') return 'from-green-600 to-emerald-600';
     if (color === 'warning') return 'from-amber-600 to-orange-600';
+    if (color === 'default') return 'from-slate-600 to-slate-600';
     return 'from-blue-600 to-indigo-600';
   };
 
   const getBadgeColor = (color) => {
     if (color === 'success') return 'from-green-400 to-emerald-600';
     if (color === 'warning') return 'from-amber-400 to-orange-600';
+    if (color === 'default') return 'from-slate-400 to-slate-600';
     return 'from-blue-400 to-indigo-600';
   };
 
   const getBarColor = (color) => {
     if (color === 'success') return 'from-green-600 to-emerald-500';
     if (color === 'warning') return 'from-amber-600 to-orange-500';
+    if (color === 'default') return 'from-slate-600 to-slate-500';
     return 'from-blue-600 to-indigo-500';
   };
 
@@ -87,7 +90,7 @@ const PlayerCard = ({ player, rank, onClick }) => {
 
         <div className="mb-6">
           <div className={`text-6xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent mb-2`}>
-            {formatWinPercentage(player.overallWinPercentage)}
+            {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
           </div>
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Win Rate</p>
         </div>
@@ -118,12 +121,12 @@ const PlayerCard = ({ player, rank, onClick }) => {
       <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-t border-slate-200">
         <div className="flex items-center gap-2 h-16">
           {player.sessions.slice(-5).map((session, index) => {
-            const sessionColor = getWinPercentageColor(session.winPercentage);
+            const sessionColor = getWinPercentageColor(session.winPercentage, session.gamesPlayed);
             return (
               <div
                 key={index}
                 className="flex-1 bg-slate-200 rounded-lg h-full relative overflow-hidden"
-                title={`${formatDate(session.date)}: ${formatWinPercentage(session.winPercentage)}`}
+                title={`${formatDate(session.date)}: ${formatWinPercentage(session.winPercentage, session.gamesPlayed)}`}
               >
                 <div
                   className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t ${getBarColor(sessionColor)} rounded-lg`}

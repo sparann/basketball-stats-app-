@@ -25,6 +25,7 @@ const SessionLog = ({ sessions }) => {
   const getGradientColor = (color) => {
     if (color === 'success') return 'from-green-600 to-emerald-600';
     if (color === 'warning') return 'from-amber-600 to-orange-600';
+    if (color === 'default') return 'from-slate-600 to-slate-600';
     return 'from-blue-600 to-indigo-600';
   };
 
@@ -39,7 +40,7 @@ const SessionLog = ({ sessions }) => {
         {sortedSessions.map((session) => {
           const totalGames = session.players.reduce((sum, p) => sum + p.gamesPlayed, 0);
           const topPerformers = getTopPerformers(session);
-          const topPerformerColor = getWinPercentageColor(topPerformers[0].winPercentage);
+          const topPerformerColor = getWinPercentageColor(topPerformers[0].winPercentage, topPerformers[0].gamesPlayed);
 
           return (
             <div

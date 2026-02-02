@@ -13,7 +13,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
   const [showMenu, setShowMenu] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const winPercentageColor = getWinPercentageColor(player.overallWinPercentage);
+  const winPercentageColor = getWinPercentageColor(player.overallWinPercentage, player.totalGamesPlayed);
 
   // Calculate best location
   const getBestLocation = () => {
@@ -112,6 +112,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
   const getGradientColor = (color) => {
     if (color === 'success') return 'from-green-600 to-emerald-600';
     if (color === 'warning') return 'from-amber-600 to-orange-600';
+    if (color === 'default') return 'from-slate-600 to-slate-600';
     return 'from-blue-600 to-indigo-600';
   };
 
@@ -165,7 +166,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
               <div>
                 <h2 className="text-3xl font-bold text-slate-900 mb-2">{player.name}</h2>
                 <div className={`text-5xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent`}>
-                  {formatWinPercentage(player.overallWinPercentage)}
+                  {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
                 </div>
                 <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Overall Win Rate</p>
               </div>
@@ -242,14 +243,14 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
           <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4">Session History</h3>
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {player.sessions.slice().reverse().map((session, index) => {
-              const sessionColor = getWinPercentageColor(session.winPercentage);
+              const sessionColor = getWinPercentageColor(session.winPercentage, session.gamesPlayed);
               const sessionGradient = getGradientColor(sessionColor);
 
               return (
                 <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                   <div className="flex items-center gap-3">
                     <div className={`w-16 h-16 bg-gradient-to-br ${sessionGradient} rounded-xl flex items-center justify-center`}>
-                      <span className="text-white font-bold text-sm">{formatWinPercentage(session.winPercentage)}</span>
+                      <span className="text-white font-bold text-sm">{formatWinPercentage(session.winPercentage, session.gamesPlayed)}</span>
                     </div>
                     <div>
                       <p className="font-semibold text-slate-900">{formatDate(session.date)}</p>
@@ -280,7 +281,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
               <div className="flex-1">
                 <p className="font-bold text-slate-900">{bestLocation.name}</p>
                 <p className="text-sm text-slate-600">
-                  {formatWinPercentage(bestLocation.winRate)} win rate • {bestLocation.gamesWon}/{bestLocation.gamesPlayed} games
+                  {formatWinPercentage(bestLocation.winRate, bestLocation.gamesPlayed)} win rate • {bestLocation.gamesWon}/{bestLocation.gamesPlayed} games
                 </p>
               </div>
             </div>

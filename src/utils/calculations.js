@@ -12,18 +12,22 @@ export const calculateWinPercentage = (won, played) => {
 /**
  * Format win percentage as a string
  * @param {number} percentage - Win percentage (0-1)
- * @returns {string} Formatted percentage
+ * @param {number} gamesPlayed - Total games played (optional)
+ * @returns {string} Formatted percentage or N/A
  */
-export const formatWinPercentage = (percentage) => {
+export const formatWinPercentage = (percentage, gamesPlayed) => {
+  if (gamesPlayed === 0) return 'N/A';
   return `${(percentage * 100).toFixed(1)}%`;
 };
 
 /**
  * Get color coding for win percentage
  * @param {number} percentage - Win percentage (0-1)
+ * @param {number} gamesPlayed - Total games played (optional)
  * @returns {string} Color class name
  */
-export const getWinPercentageColor = (percentage) => {
+export const getWinPercentageColor = (percentage, gamesPlayed) => {
+  if (gamesPlayed === 0) return 'default';
   if (percentage > 0.7) return 'success';
   if (percentage >= 0.5) return 'warning';
   return 'danger';
