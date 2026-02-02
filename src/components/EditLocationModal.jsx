@@ -1,8 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const EditLocationModal = ({ location, onClose, onSave }) => {
   const isEditing = !!location;
   const [locationName, setLocationName] = useState(location || '');
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();

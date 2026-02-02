@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 const EditPlayerModal = ({ player, onClose, onSave }) => {
@@ -8,6 +8,14 @@ const EditPlayerModal = ({ player, onClose, onSave }) => {
   const [weight, setWeight] = useState(player.weight || '');
   const [injured, setInjured] = useState(player.injured || false);
   const [uploading, setUploading] = useState(false);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const getInitials = (name) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();

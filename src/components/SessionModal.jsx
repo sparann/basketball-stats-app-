@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   formatDate,
   formatWinPercentage,
@@ -7,6 +8,14 @@ import {
 
 const SessionModal = ({ session, onClose }) => {
   if (!session) return null;
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   // Calculate session stats
   const totalGames = session.totalGames || Math.max(...session.players.map(p => p.gamesPlayed));

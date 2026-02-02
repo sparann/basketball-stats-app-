@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   formatWinPercentage,
   formatDate,
@@ -12,6 +12,14 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
 
   const [showMenu, setShowMenu] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const winPercentageColor = getWinPercentageColor(player.overallWinPercentage, player.totalGamesPlayed);
 

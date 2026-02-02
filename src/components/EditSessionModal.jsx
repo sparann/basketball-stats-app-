@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playerStats }) => {
@@ -16,6 +16,14 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const addPlayerRow = () => {
     setPlayers([...players, { name: '', gamesPlayed: '', gamesWon: '', notes: '' }]);
