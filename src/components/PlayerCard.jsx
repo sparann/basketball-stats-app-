@@ -10,7 +10,7 @@ const PlayerCard = ({ player, rank, onClick }) => {
   const isActive = isPlayerActive(player.lastPlayed);
 
   const getGradientColor = (color) => {
-    if (color === 'perfect') return 'from-yellow-400 via-amber-500 to-yellow-400 animate-pulse';
+    if (color === 'perfect') return 'from-yellow-300 via-amber-400 to-yellow-300 animate-pulse';
     if (color === 'excellent') return 'from-green-600 to-emerald-600';
     if (color === 'good') return 'from-yellow-500 to-amber-500';
     if (color === 'fair') return 'from-orange-500 to-orange-600';
@@ -101,18 +101,15 @@ const PlayerCard = ({ player, rank, onClick }) => {
           <div className={`relative ${winPercentageColor === 'perfect' ? 'flex items-center justify-center' : ''}`}>
             {winPercentageColor === 'perfect' && (
               <>
-                <div className="absolute inset-0 animate-ping opacity-20">
+                <div className="absolute inset-0 animate-ping opacity-30">
+                  <div className="w-full h-full bg-gradient-to-r from-yellow-300 to-amber-400 rounded-full blur-2xl"></div>
+                </div>
+                <div className="absolute inset-0 animate-pulse opacity-40">
                   <div className="w-full h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full blur-xl"></div>
                 </div>
-                <div className="absolute -top-1 -left-1 w-3 h-3 bg-yellow-400 rounded-full animate-bounce shadow-lg shadow-yellow-400" style={{ animationDelay: '0s' }}></div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full animate-bounce shadow-lg shadow-amber-400" style={{ animationDelay: '0.2s' }}></div>
-                <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-yellow-500 rounded-full animate-bounce shadow-lg shadow-yellow-500" style={{ animationDelay: '0.4s' }}></div>
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-500 rounded-full animate-bounce shadow-lg shadow-amber-500" style={{ animationDelay: '0.6s' }}></div>
-                <div className="absolute top-1/2 -left-3 w-2 h-2 bg-yellow-300 rounded-full animate-pulse shadow-md shadow-yellow-300" style={{ animationDelay: '0.3s' }}></div>
-                <div className="absolute top-1/2 -right-3 w-2 h-2 bg-amber-300 rounded-full animate-pulse shadow-md shadow-amber-300" style={{ animationDelay: '0.7s' }}></div>
               </>
             )}
-            <div className={`text-6xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent mb-2 ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]' : ''}`}>
+            <div className={`text-6xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent mb-2 ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_25px_rgba(251,191,36,0.8)]' : ''}`}>
               {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
             </div>
           </div>

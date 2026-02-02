@@ -34,7 +34,7 @@ const SessionModal = ({ session, onClose }) => {
   });
 
   const getGradientColor = (color) => {
-    if (color === 'perfect') return 'from-yellow-400 via-amber-500 to-yellow-400';
+    if (color === 'perfect') return 'from-yellow-300 via-amber-400 to-yellow-300';
     if (color === 'excellent') return 'from-green-600 to-emerald-600';
     if (color === 'good') return 'from-yellow-500 to-amber-500';
     if (color === 'fair') return 'from-orange-500 to-orange-600';
