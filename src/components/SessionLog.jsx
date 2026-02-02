@@ -41,7 +41,7 @@ const SessionLog = ({ sessions }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sortedSessions.map((session) => {
-          const totalGames = session.players.reduce((sum, p) => sum + p.gamesPlayed, 0);
+          const totalGames = session.totalGames || session.players.reduce((sum, p) => sum + p.gamesPlayed, 0);
           const topPerformers = getTopPerformers(session);
           const topPerformerColor = getWinPercentageColor(topPerformers[0].winPercentage, topPerformers[0].gamesPlayed);
 
