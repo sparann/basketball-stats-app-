@@ -12,32 +12,34 @@ const Header = ({ currentView, onViewChange, isAdmin }) => {
           </div>
         </div>
 
-        <nav className="flex gap-3">
-          <button
-            className={`px-6 py-3 ${
-              currentView === 'summary'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                : 'bg-slate-800 border-2 border-slate-600 text-slate-200'
-            } rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
-            onClick={() => onViewChange('summary')}
-          >
-            Player Summary
-          </button>
-          <button
-            className={`px-6 py-3 ${
-              currentView === 'sessions'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                : 'bg-slate-800 border-2 border-slate-600 text-slate-200'
-            } rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
-            onClick={() => onViewChange('sessions')}
-          >
-            Sessions
-          </button>
+        <nav className="flex justify-between items-center gap-3">
+          <div className="flex gap-3">
+            <button
+              className={`px-6 py-3 ${
+                currentView === 'summary'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                  : 'bg-slate-800 border-2 border-slate-600 text-slate-200'
+              } rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
+              onClick={() => onViewChange('summary')}
+            >
+              Player Summary
+            </button>
+            <button
+              className={`px-6 py-3 ${
+                currentView === 'sessions'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                  : 'bg-slate-800 border-2 border-slate-600 text-slate-200'
+              } rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
+              onClick={() => onViewChange('sessions')}
+            >
+              Sessions
+            </button>
+          </div>
           <button
             className={`px-6 py-3 ${
               currentView === 'admin'
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                : 'bg-slate-800 border-2 border-slate-600 text-slate-200'
+                : 'bg-slate-800 text-slate-200'
             } rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
             onClick={() => onViewChange('admin')}
           >
