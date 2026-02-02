@@ -14,7 +14,7 @@ const AdminLogin = ({ onLogin }) => {
       onLogin();
       setError('');
     } else {
-      setError('Incorrect password');
+      setError("don't worry bout it");
       setPassword('');
     }
   };
