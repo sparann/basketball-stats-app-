@@ -22,7 +22,7 @@ const Header = ({ currentView, onViewChange, isAdmin }) => {
               } rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
               onClick={() => onViewChange('summary')}
             >
-              Player Summary
+              Players
             </button>
             <button
               className={`px-6 py-3 ${
