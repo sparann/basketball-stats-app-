@@ -13,13 +13,21 @@ const SessionLog = ({ sessions }) => {
   const sortedSessions = [...sessions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const getTopPerformers = (session) => {
+    const totalGames = session.totalGames || Math.max(...session.players.map(p => p.gamesPlayed));
+    const minGamesRequired = totalGames * 0.5;
+
     const playersWithWinRate = session.players.map(p => ({
       ...p,
       winPercentage: calculateWinPercentage(p.gamesWon, p.gamesPlayed)
     }));
 
-    const maxWinPercentage = Math.max(...playersWithWinRate.map(p => p.winPercentage));
-    return playersWithWinRate.filter(p => p.winPercentage === maxWinPercentage);
+    // Only consider players who played at least 50% of total games
+    const eligiblePlayers = playersWithWinRate.filter(p => p.gamesPlayed >= minGamesRequired);
+
+    if (eligiblePlayers.length === 0) return [];
+
+    const maxWinPercentage = Math.max(...eligiblePlayers.map(p => p.winPercentage));
+    return eligiblePlayers.filter(p => p.winPercentage === maxWinPercentage);
   };
 
   const getGradientColor = (color) => {
@@ -43,7 +51,7 @@ const SessionLog = ({ sessions }) => {
         {sortedSessions.map((session) => {
           const totalGames = session.totalGames || Math.max(...session.players.map(p => p.gamesPlayed));
           const topPerformers = getTopPerformers(session);
-          const topPerformerColor = getWinPercentageColor(topPerformers[0].winPercentage, topPerformers[0].gamesPlayed);
+          const topPerformerColor = topPerformers.length > 0 ? getWinPercentageColor(topPerformers[0].winPercentage, topPerformers[0].gamesPlayed) : 'default';
 
           return (
             <div
@@ -77,16 +85,22 @@ const SessionLog = ({ sessions }) => {
                 </div>
 
                 <div className="pt-4 border-t border-slate-200">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
-                    {topPerformers.length > 1 ? 'Top Performers (Tie)' : 'Top Performer'}
-                  </p>
-                  <div className="space-y-1">
-                    {topPerformers.map((performer, index) => (
-                      <p key={index} className={`text-lg font-bold bg-gradient-to-r ${getGradientColor(topPerformerColor)} bg-clip-text text-transparent`}>
-                        {performer.name}
+                  {topPerformers.length > 0 ? (
+                    <>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                        {topPerformers.length > 1 ? 'Top Performers (Tie)' : 'Top Performer'}
                       </p>
-                    ))}
-                  </div>
+                      <div className="space-y-1">
+                        {topPerformers.map((performer, index) => (
+                          <p key={index} className={`text-lg font-bold bg-gradient-to-r ${getGradientColor(topPerformerColor)} bg-clip-text text-transparent`}>
+                            {performer.name}
+                          </p>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-sm text-slate-500 italic">No MVP (requires 50%+ game participation)</p>
+                  )}
                 </div>
               </div>
             </div>

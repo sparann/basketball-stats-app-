@@ -20,14 +20,17 @@ const SessionModal = ({ session, onClose }) => {
   // Calculate session stats
   const totalGames = session.totalGames || Math.max(...session.players.map(p => p.gamesPlayed));
   const avgGamesPerPlayer = (session.players.reduce((sum, p) => sum + p.gamesPlayed, 0) / session.players.length).toFixed(1);
+  const minGamesRequired = totalGames * 0.5;
 
   const playersWithWinRate = session.players.map(p => ({
     ...p,
     winPercentage: calculateWinPercentage(p.gamesWon, p.gamesPlayed)
   })).sort((a, b) => b.winPercentage - a.winPercentage);
 
-  const topWinPercentage = playersWithWinRate[0]?.winPercentage || 0;
-  const topPerformers = playersWithWinRate.filter(p => p.winPercentage === topWinPercentage);
+  // Only consider players who played at least 50% of total games for MVP
+  const eligibleForMVP = playersWithWinRate.filter(p => p.gamesPlayed >= minGamesRequired);
+  const topWinPercentage = eligibleForMVP.length > 0 ? Math.max(...eligibleForMVP.map(p => p.winPercentage)) : 0;
+  const topPerformers = eligibleForMVP.filter(p => p.winPercentage === topWinPercentage);
   const avgWinRate = playersWithWinRate.reduce((sum, p) => sum + p.winPercentage, 0) / playersWithWinRate.length;
 
   // Calculate ranks with tie handling (dense ranking)
