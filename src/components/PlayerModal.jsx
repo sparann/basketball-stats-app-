@@ -174,7 +174,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
                 <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Overall Win Rate</p>
               </div>
             </div>
-            <div className="flex items-start gap-2 pr-2">
+            <div className="flex items-start gap-2 flex-shrink-0">
               {/* 3-dot menu */}
               <div className="relative">
                 <button
@@ -210,7 +210,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
               </div>
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-slate-600 text-2xl font-bold transition-colors"
+                className="text-slate-400 hover:text-slate-600 text-3xl font-bold transition-colors p-1 min-w-[40px] flex items-center justify-center"
               >
                 ×
               </button>
