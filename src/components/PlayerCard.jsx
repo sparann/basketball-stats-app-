@@ -106,7 +106,7 @@ const PlayerCard = ({ player, rank, onClick }) => {
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-slate-50 rounded-2xl p-4">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Games</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Games Played</p>
             <p className="text-3xl font-bold text-slate-900">{player.totalGamesPlayed}</p>
           </div>
           <div className="bg-slate-50 rounded-2xl p-4">
