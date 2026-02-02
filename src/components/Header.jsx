@@ -1,4 +1,4 @@
-const Header = ({ currentView, onViewChange }) => {
+const Header = ({ currentView, onViewChange, isAdmin }) => {
   return (
     <header className="app-header">
       <div className="header-content">
@@ -19,6 +19,12 @@ const Header = ({ currentView, onViewChange }) => {
             onClick={() => onViewChange('sessions')}
           >
             Session Log
+          </button>
+          <button
+            className={`nav-tab ${currentView === 'admin' ? 'active' : ''}`}
+            onClick={() => onViewChange('admin')}
+          >
+            {isAdmin ? '📝 Admin' : '🔒 Admin'}
           </button>
         </nav>
       </div>
