@@ -44,22 +44,22 @@ const Captcha = ({ onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-8">
-        <h2 className="text-3xl font-bold text-slate-900 mb-4 text-center">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-4 sm:p-8 my-4">
+        <h2 className="text-lg sm:text-3xl font-bold text-slate-900 mb-3 sm:mb-4 text-center">
           To gain access to this app, please answer the following question correctly
         </h2>
 
-        <p className="text-2xl font-semibold text-slate-700 mb-6 text-center">
+        <p className="text-base sm:text-2xl font-semibold text-slate-700 mb-4 sm:mb-6 text-center">
           Select the best basketball player
         </p>
 
-        <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6">
           {players.map((player) => (
             <div
               key={player.id}
               onClick={() => setSelectedPlayer(player.id)}
-              className={`cursor-pointer rounded-2xl overflow-hidden border-4 transition-all ${
+              className={`cursor-pointer rounded-xl sm:rounded-2xl overflow-hidden border-3 sm:border-4 transition-all ${
                 selectedPlayer === player.id
                   ? 'border-blue-600 shadow-xl scale-105'
                   : 'border-slate-200 hover:border-slate-300'
@@ -68,7 +68,7 @@ const Captcha = ({ onSuccess }) => {
               <img
                 src={player.image}
                 alt={player.name}
-                className="w-full h-64 object-cover"
+                className="w-full h-32 sm:h-64 object-cover"
               />
             </div>
           ))}
@@ -76,7 +76,7 @@ const Captcha = ({ onSuccess }) => {
 
         {message && (
           <div
-            className={`text-center text-xl font-bold mb-4 ${
+            className={`text-center text-base sm:text-xl font-bold mb-3 sm:mb-4 ${
               messageType === 'success' ? 'text-green-600' : 'text-red-600'
             }`}
           >
@@ -86,7 +86,7 @@ const Captcha = ({ onSuccess }) => {
 
         <button
           onClick={handleConfirm}
-          className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-50"
+          className="w-full py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-base sm:text-lg hover:shadow-lg transition-all disabled:opacity-50"
           disabled={messageType === 'success'}
         >
           Confirm
