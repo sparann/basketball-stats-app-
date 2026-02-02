@@ -17,8 +17,21 @@ const SessionModal = ({ session, onClose }) => {
     winPercentage: calculateWinPercentage(p.gamesWon, p.gamesPlayed)
   })).sort((a, b) => b.winPercentage - a.winPercentage);
 
-  const topPerformer = playersWithWinRate[0];
+  const topWinPercentage = playersWithWinRate[0]?.winPercentage || 0;
+  const topPerformers = playersWithWinRate.filter(p => p.winPercentage === topWinPercentage);
   const avgWinRate = playersWithWinRate.reduce((sum, p) => sum + p.winPercentage, 0) / playersWithWinRate.length;
+
+  // Calculate ranks with tie handling
+  let currentRank = 1;
+  const playersWithRanks = playersWithWinRate.map((player, index) => {
+    if (index > 0) {
+      const prevPlayer = playersWithWinRate[index - 1];
+      if (player.winPercentage !== prevPlayer.winPercentage) {
+        currentRank = index + 1;
+      }
+    }
+    return { ...player, rank: currentRank };
+  });
 
   const getGradientColor = (color) => {
     if (color === 'success') return 'from-green-600 to-emerald-600';
@@ -87,9 +100,9 @@ const SessionModal = ({ session, onClose }) => {
         <div className="p-6">
           <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4">Player Performance</h3>
           <div className="space-y-3">
-            {playersWithWinRate.map((player, index) => {
+            {playersWithRanks.map((player) => {
               const playerColor = getWinPercentageColor(player.winPercentage, player.gamesPlayed);
-              const isTopPerformer = player.name === topPerformer.name;
+              const isTopPerformer = topPerformers.some(tp => tp.name === player.name);
 
               return (
                 <div
@@ -100,7 +113,7 @@ const SessionModal = ({ session, onClose }) => {
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getGradientColor(playerColor)} flex items-center justify-center text-white text-sm font-bold`}>
-                      #{index + 1}
+                      #{player.rank}
                     </div>
                     <div>
                       <p className="font-bold text-slate-900 flex items-center gap-2">
@@ -125,11 +138,11 @@ const SessionModal = ({ session, onClose }) => {
           </div>
 
           {/* Notes */}
-          {playersWithWinRate.some(p => p.notes) && (
+          {playersWithRanks.some(p => p.notes) && (
             <div className="mt-6 pt-6 border-t border-slate-200">
               <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3">Notes</h4>
               <div className="space-y-2">
-                {playersWithWinRate.filter(p => p.notes).map((player) => (
+                {playersWithRanks.filter(p => p.notes).map((player) => (
                   <div key={player.name} className="text-sm">
                     <span className="font-semibold text-slate-900">{player.name}:</span>{' '}
                     <span className="text-slate-600 italic">{player.notes}</span>
