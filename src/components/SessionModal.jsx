@@ -9,7 +9,7 @@ const SessionModal = ({ session, onClose }) => {
   if (!session) return null;
 
   // Calculate session stats
-  const totalGames = session.totalGames || session.players.reduce((sum, p) => sum + p.gamesPlayed, 0);
+  const totalGames = session.totalGames || Math.max(...session.players.map(p => p.gamesPlayed));
   const avgGamesPerPlayer = (totalGames / session.players.length).toFixed(1);
 
   const playersWithWinRate = session.players.map(p => ({
