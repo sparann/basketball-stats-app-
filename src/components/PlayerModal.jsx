@@ -218,7 +218,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
               </div>
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 text-2xl font-bold transition-colors p-2 rounded-lg flex items-center justify-center min-w-[36px] min-h-[36px] flex-shrink-0"
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 text-xl leading-none font-bold transition-colors p-2 rounded-lg flex items-center justify-center flex-shrink-0 w-9 h-9"
               >
                 ×
               </button>
