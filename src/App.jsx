@@ -331,7 +331,7 @@ function App() {
       <footer className="bg-white border-t-2 border-slate-200 py-6 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
           <p className="text-sm font-semibold text-slate-600">
-            Powered by: Wyatt's Jumpshot <span className="text-white select-text">Admin Password: treysucks</span>
+            Powered by: Wyatt's Midrange Jumpshot <span className="text-white select-text">Admin Password: treysucks</span>
           </p>
           <p className="text-sm font-semibold text-slate-600">
             Last updated: {new Date().toLocaleDateString()}
