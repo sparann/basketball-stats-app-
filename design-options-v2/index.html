@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basketball Stats - Design Options V2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0F172A;
+      color: #F8FAFC;
+      padding: 60px 40px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 56px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #FF6B00, #FF0844, #8B5CF6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .intro {
+      font-size: 18px;
+      color: #94A3B8;
+      margin-bottom: 48px;
+      max-width: 800px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 32px;
+    }
+
+    .option-card {
+      background: #1E293B;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      border: 2px solid #334155;
+    }
+
+    .option-card:hover {
+      transform: translateY(-6px);
+      border-color: #FF6B00;
+      box-shadow: 0 20px 40px rgba(255, 107, 0, 0.3);
+    }
+
+    .option-preview {
+      width: 100%;
+      height: 300px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .option-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      z-index: 10;
+    }
+
+    .option-content {
+      padding: 32px;
+    }
+
+    .option-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #F8FAFC;
+    }
+
+    .option-description {
+      font-size: 15px;
+      color: #94A3B8;
+      margin-bottom: 20px;
+      line-height: 1.7;
+    }
+
+    .option-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .feature-tag {
+      background: #334155;
+      color: #CBD5E1;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .view-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #FF6B00, #FF0844);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .view-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 24px rgba(255, 107, 0, 0.4);
+    }
+
+    .preview-tailwind {
+      background: linear-gradient(135deg, #F8FAFC 0%, #E0E7FF 100%);
+    }
+
+    .preview-brutalist {
+      background: #FFFFFF;
+    }
+
+    .preview-swiss {
+      background: #FAFAFA;
+    }
+
+    .preview-athletic {
+      background: linear-gradient(135deg, #0A0E27 0%, #1A1F3A 100%);
+    }
+
+    .note {
+      margin-top: 48px;
+      padding: 28px;
+      background: #1E293B;
+      border-radius: 16px;
+      border: 2px solid #334155;
+      border-left: 4px solid #FF6B00;
+    }
+
+    .note h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+      color: #F8FAFC;
+    }
+
+    .note p {
+      color: #94A3B8;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .tech-badge {
+      display: inline-block;
+      background: #FF6B00;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏀 Basketball Stats - New Options</h1>
+    <p class="intro">
+      4 brand new design directions for your basketball stats tracker. Each with a completely different aesthetic and feel. Click to explore!
+    </p>
+
+    <div class="grid">
+      <a href="option-1-tailwind-modern.html" class="option-card" target="_blank">
+        <div class="option-preview preview-tailwind">
+          <div class="option-badge">Option 1</div>
+        </div>
+        <div class="option-content">
+          <h2 class="option-title">
+            Tailwind Modern
+            <span class="tech-badge">Tailwind CSS</span>
+          </h2>
+          <p class="option-description">
+            Sleek and polished with rounded corners, gradient accents, and modern shadow effects. Uses Tailwind's utility classes for a contemporary SaaS-style interface.
+          </p>
+          <div class="option-features">
+            <span class="feature-tag">Plus Jakarta Sans</span>
+            <span class="feature-tag">Soft Gradients</span>
+            <span class="feature-tag">Rounded Design</span>
+            <span class="feature-tag">Modern</span>
+          </div>
+          <div class="view-btn">
+            View Design →
+          </div>
+        </div>
+      </a>
+
+      <a href="option-2-brutalist.html" class="option-card" target="_blank">
+        <div class="option-preview preview-brutalist">
+          <div class="option-badge">Option 2</div>
+        </div>
+        <div class="option-content">
+          <h2 class="option-title">Brutalist</h2>
+          <p class="option-description">
+            Raw and honest with heavy black borders, stark contrast, and utilitarian typography. Inspired by brutalist architecture and early web aesthetics.
+          </p>
+          <div class="option-features">
+            <span class="feature-tag">Space Grotesk + Courier</span>
+            <span class="feature-tag">Black & White</span>
+            <span class="feature-tag">Bold Borders</span>
+            <span class="feature-tag">Aggressive</span>
+          </div>
+          <div class="view-btn">
+            View Design →
+          </div>
+        </div>
+      </a>
+
+      <a href="option-3-swiss.html" class="option-card" target="_blank">
+        <div class="option-preview preview-swiss">
+          <div class="option-badge">Option 3</div>
+        </div>
+        <div class="option-content">
+          <h2 class="option-title">Swiss Design</h2>
+          <p class="option-description">
+            Clean and mathematical with grid-based layouts, minimal color (red accent only), and perfect hierarchy. International Typographic Style at its finest.
+          </p>
+          <div class="option-features">
+            <span class="feature-tag">IBM Plex Sans</span>
+            <span class="feature-tag">Red Accent</span>
+            <span class="feature-tag">Grid Layout</span>
+            <span class="feature-tag">Refined</span>
+          </div>
+          <div class="view-btn">
+            View Design →
+          </div>
+        </div>
+      </a>
+
+      <a href="option-4-athletic.html" class="option-card" target="_blank">
+        <div class="option-preview preview-athletic">
+          <div class="option-badge">Option 4</div>
+        </div>
+        <div class="option-content">
+          <h2 class="option-title">Athletic</h2>
+          <p class="option-description">
+            Dark and energetic with vibrant orange-to-pink gradients, dynamic angles, and stadium-inspired aesthetics. Built for competition and performance tracking.
+          </p>
+          <div class="option-features">
+            <span class="feature-tag">Oswald + Rajdhani</span>
+            <span class="feature-tag">Orange/Pink Gradients</span>
+            <span class="feature-tag">Dark Theme</span>
+            <span class="feature-tag">Dynamic</span>
+          </div>
+          <div class="view-btn">
+            View Design →
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="note">
+      <h3>What's Next?</h3>
+      <p>
+        Browse each option and pick your favorite! Once you decide, I'll implement that design into your actual app with Tailwind CSS (if you pick Option 1) or plain CSS for the others. We can also mix elements or make adjustments to get exactly what you want.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

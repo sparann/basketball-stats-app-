@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 3: Professional Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #FAFAFA;
+      --bg-secondary: #FFFFFF;
+      --text-primary: #18181B;
+      --text-secondary: #71717A;
+      --border: #E4E4E7;
+      --accent-blue: #3B82F6;
+      --accent-violet: #8B5CF6;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --error: #EF4444;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 48px 40px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-left h1 {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .header-left p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      padding: 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .controls select {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-primary);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .controls select:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .controls select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      padding: 1px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-violet));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .player-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+
+    .win-pct-section {
+      margin-bottom: 24px;
+    }
+
+    .win-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 56px;
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .win-pct.high {
+      color: var(--success);
+    }
+
+    .win-pct.medium {
+      color: var(--warning);
+    }
+
+    .win-pct.low {
+      color: var(--text-secondary);
+    }
+
+    .win-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .trend {
+      position: relative;
+    }
+
+    .trend-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .trend-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+
+    .trend-change {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .trend-bars {
+      display: flex;
+      gap: 6px;
+      height: 60px;
+      align-items: flex-end;
+      padding: 8px 0;
+    }
+
+    .bar {
+      flex: 1;
+      background: var(--bg-primary);
+      border-radius: 4px 4px 0 0;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .bar-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(180deg, var(--accent-blue), var(--accent-violet));
+      border-radius: 4px 4px 0 0;
+      transition: all 0.2s;
+    }
+
+    .bar:hover .bar-fill {
+      opacity: 0.8;
+    }
+
+    .design-label {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--text-primary);
+      color: var(--bg-secondary);
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 8px;
+      z-index: 100;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      animation: fadeInUp 0.4s ease-out backwards;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+  </style>
+</head>
+<body>
+  <div class="design-label">Option 3: Professional Dashboard</div>
+
+  <div class="container">
+    <header class="header">
+      <div class="header-left">
+        <h1>Basketball Analytics</h1>
+        <p>Performance metrics and session tracking</p>
+      </div>
+      <div class="header-right">
+        <div class="badge">
+          <div class="badge-dot"></div>
+          <span>3 Active Players</span>
+        </div>
+        <div class="badge">
+          <span>Updated 2 min ago</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="control-group">
+        <label class="control-label">Sort By</label>
+        <select>
+          <option>Win Percentage</option>
+          <option>Total Games</option>
+          <option>Last Played</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Filter</label>
+        <select>
+          <option>All Players</option>
+          <option>Active Only</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="player-name">Mike Johnson</h2>
+          <div class="status-indicator"></div>
+        </div>
+
+        <div class="win-pct-section">
+          <div class="win-pct high">70.0%</div>
+          <div class="win-label">Win Percentage</div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <span class="stat-label">Total Games</span>
+            <span class="stat-value">30</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Wins</span>
+            <span class="stat-value">21</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Sessions</span>
+            <span class="stat-value">3</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Last Played</span>
+            <span class="stat-value">Jan 29</span>
+          </div>
+        </div>
+
+        <div class="trend">
+          <div class="trend-header">
+            <span class="trend-label">Recent Trend</span>
+            <span class="trend-change">↗ +5%</span>
+          </div>
+          <div class="trend-bars">
+            <div class="bar"><div class="bar-fill" style="height: 70%"></div></div>
+            <div class="bar"><div class="bar-fill" style="height: 67%"></div></div>
+            <div class="bar"><div class="bar-fill" style="height: 75%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="player-name">Sarah Chen</h2>
+          <div class="status-indicator"></div>
+        </div>
+
+        <div class="win-pct-section">
+          <div class="win-pct high">68.2%</div>
+          <div class="win-label">Win Percentage</div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <span class="stat-label">Total Games</span>
+            <span class="stat-value">22</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Wins</span>
+            <span class="stat-value">15</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Sessions</span>
+            <span class="stat-value">2</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Last Played</span>
+            <span class="stat-value">Jan 22</span>
+          </div>
+        </div>
+
+        <div class="trend">
+          <div class="trend-header">
+            <span class="trend-label">Recent Trend</span>
+            <span class="trend-change">↗ +15%</span>
+          </div>
+          <div class="trend-bars">
+            <div class="bar"><div class="bar-fill" style="height: 60%"></div></div>
+            <div class="bar"><div class="bar-fill" style="height: 75%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="player-name">James Lee</h2>
+          <div class="status-indicator"></div>
+        </div>
+
+        <div class="win-pct-section">
+          <div class="win-pct medium">66.7%</div>
+          <div class="win-label">Win Percentage</div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <span class="stat-label">Total Games</span>
+            <span class="stat-value">30</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Wins</span>
+            <span class="stat-value">20</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Sessions</span>
+            <span class="stat-value">3</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Last Played</span>
+            <span class="stat-value">Jan 29</span>
+          </div>
+        </div>
+
+        <div class="trend">
+          <div class="trend-header">
+            <span class="trend-label">Recent Trend</span>
+            <span class="trend-change">↗ +5%</span>
+          </div>
+          <div class="trend-bars">
+            <div class="bar"><div class="bar-fill" style="height: 80%"></div></div>
+            <div class="bar"><div class="bar-fill" style="height: 58%"></div></div>
+            <div class="bar"><div class="bar-fill" style="height: 63%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

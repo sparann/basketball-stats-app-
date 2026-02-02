@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 1: Refined Minimal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;600&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --cream: #FAF8F3;
+      --charcoal: #2C2C2C;
+      --sage: #8B9D83;
+      --terracotta: #C97A5F;
+      --slate: #6B7280;
+      --gold: #D4AF37;
+    }
+
+    body {
+      font-family: 'Work Sans', sans-serif;
+      background: var(--cream);
+      color: var(--charcoal);
+      line-height: 1.6;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 40px;
+    }
+
+    .header {
+      margin-bottom: 80px;
+      text-align: center;
+      position: relative;
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 1px;
+      background: var(--sage);
+    }
+
+    .title {
+      font-family: 'Cormorant', serif;
+      font-size: 56px;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      color: var(--charcoal);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--slate);
+    }
+
+    .controls {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin-bottom: 60px;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+    }
+
+    .controls select {
+      padding: 8px 16px;
+      border: 1px solid #E5E5E5;
+      background: white;
+      border-radius: 2px;
+      font-family: 'Work Sans', sans-serif;
+      color: var(--charcoal);
+      cursor: pointer;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 40px;
+    }
+
+    .card {
+      background: white;
+      padding: 48px 36px;
+      border: 1px solid #ECECEC;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--sage), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--sage);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .player-name {
+      font-family: 'Cormorant', serif;
+      font-size: 32px;
+      font-weight: 400;
+      margin-bottom: 32px;
+      color: var(--charcoal);
+      letter-spacing: -0.01em;
+    }
+
+    .win-pct {
+      font-family: 'Cormorant', serif;
+      font-size: 72px;
+      font-weight: 300;
+      line-height: 1;
+      margin-bottom: 8px;
+      color: var(--sage);
+      letter-spacing: -0.02em;
+    }
+
+    .win-pct.high {
+      color: var(--sage);
+    }
+
+    .win-pct.medium {
+      color: var(--terracotta);
+    }
+
+    .win-pct.low {
+      color: var(--slate);
+    }
+
+    .win-label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 36px;
+      font-weight: 400;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px 32px;
+      padding-top: 32px;
+      border-top: 1px solid #F5F5F5;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 6px;
+      font-weight: 400;
+    }
+
+    .stat-value {
+      font-family: 'Cormorant', serif;
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--charcoal);
+    }
+
+    .trend {
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid #F5F5F5;
+    }
+
+    .trend-label {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 16px;
+    }
+
+    .trend-bars {
+      display: flex;
+      gap: 6px;
+      height: 60px;
+      align-items: flex-end;
+    }
+
+    .bar {
+      flex: 1;
+      background: #F5F5F5;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .bar-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--sage);
+      transition: all 0.3s;
+    }
+
+    .bar:hover .bar-fill {
+      opacity: 0.8;
+    }
+
+    .design-label {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--charcoal);
+      color: var(--cream);
+      padding: 12px 20px;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="design-label">Option 1: Refined Minimal</div>
+
+  <div class="container">
+    <header class="header">
+      <h1 class="title">Basketball Statistics</h1>
+      <p class="subtitle">Season Performance</p>
+    </header>
+
+    <div class="controls">
+      <select>
+        <option>Sort by Win %</option>
+        <option>Sort by Total Games</option>
+        <option>Sort by Last Played</option>
+      </select>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2 class="player-name">Mike Johnson</h2>
+        <div class="win-pct high">70.0%</div>
+        <div class="win-label">Win Percentage</div>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label">Total Games</span>
+            <span class="stat-value">30</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Games Won</span>
+            <span class="stat-value">21</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Sessions</span>
+            <span class="stat-value">3</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Last Played</span>
+            <span class="stat-value">Jan 29</span>
+          </div>
+        </div>
+
+        <div class="trend">
+          <div class="trend-label">Recent Performance</div>
+          <div class="trend-bars">
+            <div class="bar"><div class="bar-fill" style="height: 70%"></div></div>
+            <div class="bar"><div class="bar-fill" style="height: 67%"></div></div>
+            <div class="bar"><div class="bar-fill" style="height: 75%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="player-name">Sarah Chen</h2>
+        <div class="win-pct high">68.2%</div>
+        <div class="win-label">Win Percentage</div>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label">Total Games</span>
+            <span class="stat-value">22</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Games Won</span>
+            <span class="stat-value">15</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Sessions</span>
+            <span class="stat-value">2</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Last Played</span>
+            <span class="stat-value">Jan 22</span>
+          </div>
+        </div>
+
+        <div class="trend">
+          <div class="trend-label">Recent Performance</div>
+          <div class="trend-bars">
+            <div class="bar"><div class="bar-fill" style="height: 60%"></div></div>
+            <div class="bar"><div class="bar-fill" style="height: 75%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="player-name">James Lee</h2>
+        <div class="win-pct medium">66.7%</div>
+        <div class="win-label">Win Percentage</div>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label">Total Games</span>
+            <span class="stat-value">30</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Games Won</span>
+            <span class="stat-value">20</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Sessions</span>
+            <span class="stat-value">3</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Last Played</span>
+            <span class="stat-value">Jan 29</span>
+          </div>
+        </div>
+
+        <div class="trend">
+          <div class="trend-label">Recent Performance</div>
+          <div class="trend-bars">
+            <div class="bar"><div class="bar-fill" style="height: 80%"></div></div>
+            <div class="bar"><div class="bar-fill" style="height: 58%"></div></div>
+            <div class="bar"><div class="bar-fill" style="height: 63%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

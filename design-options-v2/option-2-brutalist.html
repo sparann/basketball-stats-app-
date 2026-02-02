@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 2: Brutalist</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier Prime', monospace;
+      background: #FFFFFF;
+      color: #000000;
+      line-height: 1.4;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .header {
+      border: 4px solid #000000;
+      padding: 32px;
+      margin-bottom: 40px;
+      background: #000000;
+      color: #FFFFFF;
+    }
+
+    .title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 96px;
+      font-weight: 700;
+      line-height: 0.9;
+      text-transform: uppercase;
+      letter-spacing: -0.04em;
+      margin-bottom: 16px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: #CCCCCC;
+    }
+
+    .controls {
+      border: 4px solid #000000;
+      padding: 24px;
+      margin-bottom: 40px;
+      background: #FFFFFF;
+      display: flex;
+      gap: 24px;
+    }
+
+    .control {
+      flex: 1;
+    }
+
+    .control label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 8px;
+    }
+
+    .control select {
+      width: 100%;
+      padding: 12px;
+      border: 3px solid #000000;
+      background: #FFFFFF;
+      font-family: 'Courier Prime', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 40px;
+    }
+
+    .card {
+      border: 4px solid #000000;
+      background: #FFFFFF;
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: -12px;
+      right: 12px;
+      bottom: 12px;
+      border: 4px solid #000000;
+      pointer-events: none;
+    }
+
+    .card-number {
+      position: absolute;
+      top: -20px;
+      right: 32px;
+      background: #000000;
+      color: #FFFFFF;
+      padding: 8px 20px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      border: 4px solid #000000;
+    }
+
+    .card-inner {
+      padding: 48px 32px 32px;
+    }
+
+    .player-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 32px;
+      letter-spacing: -0.02em;
+    }
+
+    .win-section {
+      border-top: 3px solid #000000;
+      border-bottom: 3px solid #000000;
+      padding: 32px 0;
+      margin-bottom: 32px;
+    }
+
+    .win-pct {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 120px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .win-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-top: 8px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat {
+      border: 3px solid #000000;
+      padding: 20px;
+      background: #000000;
+      color: #FFFFFF;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .trend {
+      border-top: 3px solid #000000;
+      padding-top: 24px;
+    }
+
+    .trend-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 16px;
+    }
+
+    .trend-bars {
+      display: flex;
+      gap: 12px;
+      height: 100px;
+      align-items: flex-end;
+    }
+
+    .bar {
+      flex: 1;
+      background: #FFFFFF;
+      border: 3px solid #000000;
+      position: relative;
+    }
+
+    .bar-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #000000;
+    }
+
+    .design-label {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #000000;
+      color: #FFFFFF;
+      padding: 12px 24px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border: 3px solid #000000;
+      z-index: 100;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .meta-item {
+      display: flex;
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .title {
+        font-size: 56px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .win-pct {
+        font-size: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="design-label">Option 2: Brutalist</div>
+
+  <div class="container">
+
+    <header class="header">
+      <h1 class="title">STATS</h1>
+      <p class="subtitle">Basketball Performance Tracker</p>
+    </header>
+
+    <div class="controls">
+      <div class="control">
+        <label>Sort</label>
+        <select>
+          <option>WIN PERCENTAGE</option>
+          <option>TOTAL GAMES</option>
+          <option>LAST PLAYED</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Filter</label>
+        <select>
+          <option>ALL PLAYERS</option>
+          <option>ACTIVE ONLY</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <div class="card">
+        <div class="card-number">01</div>
+        <div class="card-inner">
+          <h2 class="player-name">MIKE<br>JOHNSON</h2>
+
+          <div class="win-section">
+            <div class="win-pct">70.0%</div>
+            <div class="win-label">Win Rate</div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="stat-label">Games</div>
+              <div class="stat-value">30</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Wins</div>
+              <div class="stat-value">21</div>
+            </div>
+          </div>
+
+          <div class="meta">
+            <div class="meta-item">
+              <span>Sessions:</span>
+              <span>3</span>
+            </div>
+            <div class="meta-item">
+              <span>Last:</span>
+              <span>JAN 29</span>
+            </div>
+          </div>
+
+          <div class="trend">
+            <div class="trend-label">Performance</div>
+            <div class="trend-bars">
+              <div class="bar">
+                <div class="bar-fill" style="height: 70%"></div>
+              </div>
+              <div class="bar">
+                <div class="bar-fill" style="height: 67%"></div>
+              </div>
+              <div class="bar">
+                <div class="bar-fill" style="height: 75%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-number">02</div>
+        <div class="card-inner">
+          <h2 class="player-name">SARAH<br>CHEN</h2>
+
+          <div class="win-section">
+            <div class="win-pct">68.2%</div>
+            <div class="win-label">Win Rate</div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="stat-label">Games</div>
+              <div class="stat-value">22</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Wins</div>
+              <div class="stat-value">15</div>
+            </div>
+          </div>
+
+          <div class="meta">
+            <div class="meta-item">
+              <span>Sessions:</span>
+              <span>2</span>
+            </div>
+            <div class="meta-item">
+              <span>Last:</span>
+              <span>JAN 22</span>
+            </div>
+          </div>
+
+          <div class="trend">
+            <div class="trend-label">Performance</div>
+            <div class="trend-bars">
+              <div class="bar">
+                <div class="bar-fill" style="height: 60%"></div>
+              </div>
+              <div class="bar">
+                <div class="bar-fill" style="height: 75%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-number">03</div>
+        <div class="card-inner">
+          <h2 class="player-name">JAMES<br>LEE</h2>
+
+          <div class="win-section">
+            <div class="win-pct">66.7%</div>
+            <div class="win-label">Win Rate</div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="stat-label">Games</div>
+              <div class="stat-value">30</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Wins</div>
+              <div class="stat-value">20</div>
+            </div>
+          </div>
+
+          <div class="meta">
+            <div class="meta-item">
+              <span>Sessions:</span>
+              <span>3</span>
+            </div>
+            <div class="meta-item">
+              <span>Last:</span>
+              <span>JAN 29</span>
+            </div>
+          </div>
+
+          <div class="trend">
+            <div class="trend-label">Performance</div>
+            <div class="trend-bars">
+              <div class="bar">
+                <div class="bar-fill" style="height: 80%"></div>
+              </div>
+              <div class="bar">
+                <div class="bar-fill" style="height: 58%"></div>
+              </div>
+              <div class="bar">
+                <div class="bar-fill" style="height: 63%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

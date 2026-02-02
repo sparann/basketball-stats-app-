@@ -1,169 +1,101 @@
 import { useState } from 'react';
+import SessionModal from './SessionModal';
 import {
   formatDate,
-  formatWinPercentage,
   calculateWinPercentage,
   getWinPercentageColor
 } from '../utils/calculations';
 
 const SessionLog = ({ sessions }) => {
-  const [sortColumn, setSortColumn] = useState('date');
-  const [sortDirection, setSortDirection] = useState('desc');
-  const [filterPlayer, setFilterPlayer] = useState('');
-  const [showNotes, setShowNotes] = useState(true);
+  const [selectedSession, setSelectedSession] = useState(null);
 
-  // Flatten sessions into individual rows
-  const flattenedSessions = [];
-  sessions.forEach((session) => {
-    session.players.forEach((player) => {
-      flattenedSessions.push({
-        date: session.date,
-        playerName: player.name,
-        gamesPlayed: player.gamesPlayed,
-        gamesWon: player.gamesWon,
-        winPercentage: calculateWinPercentage(player.gamesWon, player.gamesPlayed),
-        notes: player.notes
-      });
-    });
-  });
+  // Sort sessions by date (newest first)
+  const sortedSessions = [...sessions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // Get unique player names for filter
-  const playerNames = [...new Set(flattenedSessions.map((s) => s.playerName))].sort();
-
-  // Filter by player
-  let filteredSessions = filterPlayer
-    ? flattenedSessions.filter((s) => s.playerName === filterPlayer)
-    : flattenedSessions;
-
-  // Sort sessions
-  filteredSessions.sort((a, b) => {
-    let aValue = a[sortColumn];
-    let bValue = b[sortColumn];
-
-    if (sortColumn === 'date') {
-      aValue = new Date(aValue);
-      bValue = new Date(bValue);
-    }
-
-    if (sortDirection === 'asc') {
-      return aValue > bValue ? 1 : -1;
-    } else {
-      return aValue < bValue ? 1 : -1;
-    }
-  });
-
-  const handleSort = (column) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('desc');
-    }
+  const getTopPerformer = (session) => {
+    const playersWithWinRate = session.players.map(p => ({
+      ...p,
+      winPercentage: calculateWinPercentage(p.gamesWon, p.gamesPlayed)
+    }));
+    return playersWithWinRate.reduce((top, player) =>
+      player.winPercentage > top.winPercentage ? player : top
+    );
   };
 
-  const exportToCSV = () => {
-    const headers = ['Date', 'Player Name', 'Games Played', 'Games Won', 'Win %', 'Notes'];
-    const rows = filteredSessions.map((s) => [
-      s.date,
-      s.playerName,
-      s.gamesPlayed,
-      s.gamesWon,
-      formatWinPercentage(s.winPercentage),
-      s.notes
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'basketball_stats.csv';
-    a.click();
+  const getGradientColor = (color) => {
+    if (color === 'success') return 'from-green-600 to-emerald-600';
+    if (color === 'warning') return 'from-amber-600 to-orange-600';
+    return 'from-blue-600 to-indigo-600';
   };
 
   return (
-    <div className="session-log">
-      <div className="log-controls">
-        <div className="control-group">
-          <label htmlFor="player-filter">Filter by player:</label>
-          <select
-            id="player-filter"
-            value={filterPlayer}
-            onChange={(e) => setFilterPlayer(e.target.value)}
-          >
-            <option value="">All Players</option>
-            {playerNames.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
+    <div className="space-y-4">
+      <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden p-6">
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Session History</h2>
+        <p className="text-slate-600">Click on a session to view detailed statistics</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {sortedSessions.map((session) => {
+          const totalGames = session.players.reduce((sum, p) => sum + p.gamesPlayed, 0);
+          const topPerformer = getTopPerformer(session);
+          const topPerformerColor = getWinPercentageColor(topPerformer.winPercentage);
+
+          return (
+            <div
+              key={session.date}
+              onClick={() => setSelectedSession(session)}
+              className="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-slate-100 cursor-pointer"
+            >
+              <div className="p-6">
+                <div className="mb-4">
+                  <h3 className="text-xl font-bold text-slate-900 mb-1">{formatDate(session.date)}</h3>
+                  {session.location && (
+                    <p className="text-sm text-slate-500 flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {session.location}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-slate-50 rounded-2xl p-3">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Players</p>
+                    <p className="text-2xl font-bold text-slate-900">{session.players.length}</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-2xl p-3">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Games</p>
+                    <p className="text-2xl font-bold text-slate-900">{totalGames}</p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-200">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Top Performer</p>
+                  <p className={`text-lg font-bold bg-gradient-to-r ${getGradientColor(topPerformerColor)} bg-clip-text text-transparent`}>
+                    {topPerformer.name}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {sortedSessions.length === 0 && (
+        <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-12 text-center">
+          <p className="text-slate-500 font-semibold">No sessions recorded yet</p>
         </div>
+      )}
 
-        <div className="control-group">
-          <label htmlFor="show-notes">
-            <input
-              type="checkbox"
-              id="show-notes"
-              checked={showNotes}
-              onChange={(e) => setShowNotes(e.target.checked)}
-            />
-            Show notes
-          </label>
-        </div>
-
-        <button onClick={exportToCSV} className="export-btn">
-          Export to CSV
-        </button>
-      </div>
-
-      <div className="table-container">
-        <table className="session-table">
-          <thead>
-            <tr>
-              <th onClick={() => handleSort('date')} className="sortable">
-                Date {sortColumn === 'date' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => handleSort('playerName')} className="sortable">
-                Player {sortColumn === 'playerName' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => handleSort('gamesPlayed')} className="sortable">
-                Games Played{' '}
-                {sortColumn === 'gamesPlayed' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => handleSort('gamesWon')} className="sortable">
-                Games Won {sortColumn === 'gamesWon' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => handleSort('winPercentage')} className="sortable">
-                Win % {sortColumn === 'winPercentage' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
-              {showNotes && <th>Notes</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSessions.map((session, index) => (
-              <tr key={index}>
-                <td>{formatDate(session.date)}</td>
-                <td className="player-name-cell">{session.playerName}</td>
-                <td className="number-cell">{session.gamesPlayed}</td>
-                <td className="number-cell">{session.gamesWon}</td>
-                <td className={`number-cell ${getWinPercentageColor(session.winPercentage)}`}>
-                  {formatWinPercentage(session.winPercentage)}
-                </td>
-                {showNotes && <td className="notes-cell">{session.notes}</td>}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="table-footer">
-        Showing {filteredSessions.length} session{filteredSessions.length !== 1 ? 's' : ''}
-      </div>
+      {selectedSession && (
+        <SessionModal
+          session={selectedSession}
+          onClose={() => setSelectedSession(null)}
+        />
+      )}
     </div>
   );
 };

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basketball Stats - Design Options</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #F5F5F5;
+      padding: 60px 40px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #1A1A1A;
+    }
+
+    .intro {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 48px;
+      max-width: 800px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 32px;
+    }
+
+    .option-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .option-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .option-preview {
+      width: 100%;
+      height: 300px;
+      background: #E5E5E5;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .option-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .option-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .option-content {
+      padding: 28px;
+    }
+
+    .option-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #1A1A1A;
+    }
+
+    .option-description {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .option-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .feature-tag {
+      background: #F0F0F0;
+      color: #666;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .view-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #1A1A1A;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .view-btn:hover {
+      background: #333;
+    }
+
+    .preview-1 { background: linear-gradient(135deg, #FAF8F3 0%, #E8DCC4 100%); }
+    .preview-2 { background: linear-gradient(135deg, #0EA5E9 0%, #A855F7 100%); }
+    .preview-3 { background: linear-gradient(135deg, #FAFAFA 0%, #E4E4E7 100%); }
+    .preview-4 { background: linear-gradient(135deg, #FFFEF9 0%, #C85C3E 100%); }
+
+    .note {
+      margin-top: 48px;
+      padding: 24px;
+      background: white;
+      border-radius: 12px;
+      border-left: 4px solid #1A1A1A;
+    }
+
+    .note h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .note p {
+      color: #666;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏀 Basketball Stats - Design Options</h1>
+    <p class="intro">
+      I've created 4 distinct design directions for your basketball stats tracker. Each has a unique aesthetic, color palette, typography, and layout. Click on any option to see the full design in action!
+    </p>
+
+    <div class="grid">
+      <a href="option-1-refined-minimal.html" class="option-card" target="_blank">
+        <div class="option-preview preview-1">
+          <div class="option-badge">Option 1</div>
+        </div>
+        <div class="option-content">
+          <h2 class="option-title">Refined Minimal</h2>
+          <p class="option-description">
+            Inspired by Swiss design with elegant serif typography, generous white space, and subtle earth tones. Sophisticated and timeless.
+          </p>
+          <div class="option-features">
+            <span class="feature-tag">Cormorant + Work Sans</span>
+            <span class="feature-tag">Cream & Sage</span>
+            <span class="feature-tag">Clean Layout</span>
+            <span class="feature-tag">Elegant</span>
+          </div>
+          <div class="view-btn">
+            View Design →
+          </div>
+        </div>
+      </a>
+
+      <a href="option-2-bold-sporty.html" class="option-card" target="_blank">
+        <div class="option-preview preview-2">
+          <div class="option-badge">Option 2</div>
+        </div>
+        <div class="option-content">
+          <h2 class="option-title">Bold Sporty</h2>
+          <p class="option-description">
+            Inspired by Nike/ESPN with strong typography, dynamic angles, and high-energy colors. Perfect for a competitive sports vibe.
+          </p>
+          <div class="option-features">
+            <span class="feature-tag">Bebas Neue + Archivo</span>
+            <span class="feature-tag">Electric Blue & Orange</span>
+            <span class="feature-tag">Angled Cuts</span>
+            <span class="feature-tag">Energetic</span>
+          </div>
+          <div class="view-btn">
+            View Design →
+          </div>
+        </div>
+      </a>
+
+      <a href="option-3-professional-dashboard.html" class="option-card" target="_blank">
+        <div class="option-preview preview-3">
+          <div class="option-badge">Option 3</div>
+        </div>
+        <div class="option-content">
+          <h2 class="option-title">Professional Dashboard</h2>
+          <p class="option-description">
+            Inspired by Linear/Notion with a data-focused approach, structured grids, and monospace accents. Modern and sophisticated.
+          </p>
+          <div class="option-features">
+            <span class="feature-tag">DM Sans + JetBrains Mono</span>
+            <span class="feature-tag">Neutral Grays</span>
+            <span class="feature-tag">Structured Grid</span>
+            <span class="feature-tag">Data-Driven</span>
+          </div>
+          <div class="view-btn">
+            View Design →
+          </div>
+        </div>
+      </a>
+
+      <a href="option-4-editorial-magazine.html" class="option-card" target="_blank">
+        <div class="option-preview preview-4">
+          <div class="option-badge">Option 4</div>
+        </div>
+        <div class="option-content">
+          <h2 class="option-title">Editorial Magazine</h2>
+          <p class="option-description">
+            Inspired by print magazines with interesting typography hierarchy, asymmetric layouts, and creative borders. Unique and memorable.
+          </p>
+          <div class="option-features">
+            <span class="feature-tag">Playfair Display + Manrope</span>
+            <span class="feature-tag">Paper & Ink</span>
+            <span class="feature-tag">Asymmetric Grid</span>
+            <span class="feature-tag">Editorial</span>
+          </div>
+          <div class="view-btn">
+            View Design →
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="note">
+      <h3>What's Next?</h3>
+      <p>
+        Browse each option and pick your favorite! Once you decide, I'll implement that design into your actual app. We can also mix elements from different options or make tweaks to get exactly what you want.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

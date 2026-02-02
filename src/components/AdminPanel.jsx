@@ -1,198 +1,92 @@
 import { useState } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import ManageSessions from './ManageSessions';
+import ManagePlayers from './ManagePlayers';
+import ManageLocations from './ManageLocations';
 
-const AdminPanel = ({ onLogout, onSessionAdded }) => {
-  const [sessionDate, setSessionDate] = useState('');
-  const [players, setPlayers] = useState([
-    { name: '', gamesPlayed: '', gamesWon: '', notes: '' }
-  ]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
-
-  const addPlayerRow = () => {
-    setPlayers([...players, { name: '', gamesPlayed: '', gamesWon: '', notes: '' }]);
-  };
-
-  const removePlayerRow = (index) => {
-    if (players.length > 1) {
-      setPlayers(players.filter((_, i) => i !== index));
-    }
-  };
-
-  const updatePlayer = (index, field, value) => {
-    const updated = [...players];
-    updated[index][field] = value;
-    setPlayers(updated);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setMessage({ type: '', text: '' });
-
-    // Validate data
-    if (!sessionDate) {
-      setMessage({ type: 'error', text: 'Please enter a session date' });
-      setIsSubmitting(false);
-      return;
-    }
-
-    const validPlayers = players.filter(
-      (p) => p.name && p.gamesPlayed && p.gamesWon
-    );
-
-    if (validPlayers.length === 0) {
-      setMessage({ type: 'error', text: 'Please add at least one player' });
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Convert to correct format
-    const sessionData = {
-      date: sessionDate,
-      players: validPlayers.map((p) => ({
-        name: p.name.trim(),
-        gamesPlayed: parseInt(p.gamesPlayed),
-        gamesWon: parseInt(p.gamesWon),
-        notes: p.notes.trim()
-      }))
-    };
-
-    // Check if someone won more games than they played
-    for (const player of sessionData.players) {
-      if (player.gamesWon > player.gamesPlayed) {
-        setMessage({
-          type: 'error',
-          text: `${player.name} can't win more games than they played`
-        });
-        setIsSubmitting(false);
-        return;
-      }
-    }
-
-    try {
-      if (isSupabaseConfigured()) {
-        // Save to Supabase
-        const { error } = await supabase.from('sessions').insert([sessionData]);
-
-        if (error) throw error;
-
-        setMessage({ type: 'success', text: 'Session added successfully!' });
-
-        // Reset form
-        setSessionDate('');
-        setPlayers([{ name: '', gamesPlayed: '', gamesWon: '', notes: '' }]);
-
-        // Notify parent to refresh data
-        if (onSessionAdded) onSessionAdded();
-      } else {
-        setMessage({
-          type: 'warning',
-          text: 'Supabase not configured. Session data displayed below (copy to stats.json):'
-        });
-        console.log('Session data to add:', JSON.stringify(sessionData, null, 2));
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: `Error: ${error.message}` });
-    }
-
-    setIsSubmitting(false);
-  };
+const AdminPanel = ({
+  onLogout,
+  onSessionAdded,
+  playerStats,
+  onUpdatePlayer,
+  onDeletePlayer,
+  sessions,
+  locations,
+  onAddLocation,
+  onEditLocation,
+  onRemoveLocation,
+  onDeleteSession
+}) => {
+  const [activeTab, setActiveTab] = useState('sessions');
 
   return (
-    <div className="admin-panel">
-      <div className="admin-header">
-        <h2>📝 Add New Session</h2>
-        <button onClick={onLogout} className="logout-btn">
-          Logout
-        </button>
-      </div>
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-200">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-slate-900">Admin Panel</h2>
+            <button
+              onClick={onLogout}
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
 
-      <form onSubmit={handleSubmit} className="session-form">
-        <div className="form-group">
-          <label htmlFor="session-date">Session Date</label>
-          <input
-            type="date"
-            id="session-date"
-            value={sessionDate}
-            onChange={(e) => setSessionDate(e.target.value)}
-            className="date-input"
-            required
-          />
+          {/* Tabs */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('sessions')}
+              className={`px-5 py-2.5 ${activeTab === 'sessions' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
+            >
+              Sessions
+            </button>
+            <button
+              onClick={() => setActiveTab('players')}
+              className={`px-5 py-2.5 ${activeTab === 'players' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
+            >
+              Players
+            </button>
+            <button
+              onClick={() => setActiveTab('locations')}
+              className={`px-5 py-2.5 ${activeTab === 'locations' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
+            >
+              Locations
+            </button>
+          </div>
         </div>
 
-        <div className="players-section">
-          <h3>Players</h3>
-
-          {players.map((player, index) => (
-            <div key={index} className="player-row">
-              <input
-                type="text"
-                placeholder="Player Name"
-                value={player.name}
-                onChange={(e) => updatePlayer(index, 'name', e.target.value)}
-                className="player-input"
-                required
-              />
-              <input
-                type="number"
-                placeholder="Games Played"
-                value={player.gamesPlayed}
-                onChange={(e) => updatePlayer(index, 'gamesPlayed', e.target.value)}
-                className="number-input"
-                min="0"
-                required
-              />
-              <input
-                type="number"
-                placeholder="Games Won"
-                value={player.gamesWon}
-                onChange={(e) => updatePlayer(index, 'gamesWon', e.target.value)}
-                className="number-input"
-                min="0"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Notes (optional)"
-                value={player.notes}
-                onChange={(e) => updatePlayer(index, 'notes', e.target.value)}
-                className="notes-input"
-              />
-              <button
-                type="button"
-                onClick={() => removePlayerRow(index)}
-                className="remove-btn"
-                disabled={players.length === 1}
-                title="Remove player"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-
-          <button type="button" onClick={addPlayerRow} className="add-player-btn">
-            + Add Another Player
-          </button>
-        </div>
-
-        {message.text && (
-          <div className={`message ${message.type}`}>{message.text}</div>
+        {activeTab === 'sessions' && (
+          <div className="p-6">
+            <ManageSessions
+              sessions={sessions}
+              locations={locations}
+              onSessionUpdated={onSessionAdded}
+              onDeleteSession={onDeleteSession}
+            />
+          </div>
         )}
 
-        <button type="submit" disabled={isSubmitting} className="submit-btn">
-          {isSubmitting ? 'Adding Session...' : 'Add Session'}
-        </button>
-      </form>
+        {activeTab === 'players' && (
+          <div className="p-6">
+            <ManagePlayers
+              players={playerStats}
+              onUpdatePlayer={onUpdatePlayer}
+              onDeletePlayer={onDeletePlayer}
+            />
+          </div>
+        )}
 
-      {!isSupabaseConfigured() && (
-        <div className="warning-box">
-          <p>
-            ⚠️ Supabase is not configured yet. Follow the setup guide to enable database
-            storage.
-          </p>
-        </div>
-      )}
+        {activeTab === 'locations' && (
+          <div className="p-6">
+            <ManageLocations
+              locations={locations}
+              onAddLocation={onAddLocation}
+              onEditLocation={onEditLocation}
+              onRemoveLocation={onRemoveLocation}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

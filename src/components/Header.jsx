@@ -1,30 +1,46 @@
 const Header = ({ currentView, onViewChange, isAdmin }) => {
   return (
-    <header className="app-header">
-      <div className="header-content">
-        <h1 className="app-title">
-          <span className="basketball-icon">🏀</span>
-          Basketball Stats Tracker
-        </h1>
+    <header className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-b-2 border-slate-700">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-5xl font-extrabold text-white tracking-tight mb-2">
+              Basketball Win Tracker
+            </h1>
+            <p className="text-slate-300 font-semibold">Tracking Pickup Games. Courtesy of: Wyatt</p>
+          </div>
+        </div>
 
-        <nav className="nav-tabs">
+        <nav className="flex gap-3">
           <button
-            className={`nav-tab ${currentView === 'summary' ? 'active' : ''}`}
+            className={`px-6 py-3 ${
+              currentView === 'summary'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                : 'bg-slate-800 border-2 border-slate-600 text-slate-200'
+            } rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
             onClick={() => onViewChange('summary')}
           >
             Player Summary
           </button>
           <button
-            className={`nav-tab ${currentView === 'sessions' ? 'active' : ''}`}
+            className={`px-6 py-3 ${
+              currentView === 'sessions'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                : 'bg-slate-800 border-2 border-slate-600 text-slate-200'
+            } rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
             onClick={() => onViewChange('sessions')}
           >
-            Session Log
+            Sessions
           </button>
           <button
-            className={`nav-tab ${currentView === 'admin' ? 'active' : ''}`}
+            className={`px-6 py-3 ${
+              currentView === 'admin'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                : 'bg-slate-800 border-2 border-slate-600 text-slate-200'
+            } rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
             onClick={() => onViewChange('admin')}
           >
-            {isAdmin ? '📝 Admin' : '🔒 Admin'}
+            Admin
           </button>
         </nav>
       </div>
