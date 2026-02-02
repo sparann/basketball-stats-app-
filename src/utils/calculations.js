@@ -30,7 +30,7 @@ export const getWinPercentageColor = (percentage, gamesPlayed) => {
   if (gamesPlayed === 0) return 'default';
   if (percentage === 1) return 'perfect';
   if (percentage > 0.75) return 'excellent';
-  if (percentage > 0.5) return 'good';
+  if (percentage >= 0.5) return 'good';
   if (percentage > 0.25) return 'fair';
   return 'poor';
 };
