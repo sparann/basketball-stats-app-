@@ -200,31 +200,67 @@ function App() {
     localStorage.setItem('locations', JSON.stringify(newLocations));
   };
 
-  const handleDeletePlayer = (playerName) => {
-    // Remove from player stats
-    setPlayerStats(prevStats => prevStats.filter(player => player.name !== playerName));
+  const handleDeletePlayer = async (playerName) => {
+    try {
+      if (isSupabaseConfigured()) {
+        // Get all sessions
+        const { data: allSessions, error: fetchError } = await supabase
+          .from('sessions')
+          .select('*');
 
-    // Clean up localStorage
-    const newInjuredPlayers = { ...injuredPlayers };
-    delete newInjuredPlayers[playerName];
-    setInjuredPlayers(newInjuredPlayers);
-    localStorage.setItem('injuredPlayers', JSON.stringify(newInjuredPlayers));
+        if (fetchError) throw fetchError;
 
-    const newPlayerPictures = { ...playerPictures };
-    delete newPlayerPictures[playerName];
-    setPlayerPictures(newPlayerPictures);
-    localStorage.setItem('playerPictures', JSON.stringify(newPlayerPictures));
+        // Update each session to remove this player
+        for (const session of allSessions) {
+          const updatedPlayers = session.players.filter(p => p.name !== playerName);
 
-    const newPlayerDetails = { ...playerDetails };
-    delete newPlayerDetails[playerName];
-    setPlayerDetails(newPlayerDetails);
-    localStorage.setItem('playerDetails', JSON.stringify(newPlayerDetails));
+          // Only update if there are remaining players, otherwise delete the session
+          if (updatedPlayers.length > 0) {
+            const { error: updateError } = await supabase
+              .from('sessions')
+              .update({ players: updatedPlayers })
+              .eq('date', session.date);
+
+            if (updateError) throw updateError;
+          } else {
+            // Delete session if no players remain
+            const { error: deleteError } = await supabase
+              .from('sessions')
+              .delete()
+              .eq('date', session.date);
+
+            if (deleteError) throw deleteError;
+          }
+        }
+      }
+
+      // Clean up localStorage
+      const newInjuredPlayers = { ...injuredPlayers };
+      delete newInjuredPlayers[playerName];
+      setInjuredPlayers(newInjuredPlayers);
+      localStorage.setItem('injuredPlayers', JSON.stringify(newInjuredPlayers));
+
+      const newPlayerPictures = { ...playerPictures };
+      delete newPlayerPictures[playerName];
+      setPlayerPictures(newPlayerPictures);
+      localStorage.setItem('playerPictures', JSON.stringify(newPlayerPictures));
+
+      const newPlayerDetails = { ...playerDetails };
+      delete newPlayerDetails[playerName];
+      setPlayerDetails(newPlayerDetails);
+      localStorage.setItem('playerDetails', JSON.stringify(newPlayerDetails));
+
+      // Reload all data
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting player:', error);
+      alert(`Failed to delete player: ${error.message}`);
+    }
   };
 
-  const handleDeleteSession = (sessionDate) => {
-    setSessions(prevSessions => prevSessions.filter(session => session.date !== sessionDate));
-    // Reload data to recalculate player stats
-    loadData();
+  const handleDeleteSession = async (sessionDate) => {
+    // Reload data from Supabase to get updated list
+    await loadData();
   };
 
   if (isLoading) {
