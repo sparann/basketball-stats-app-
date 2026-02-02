@@ -16,9 +16,18 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [captchaCompleted, setCaptchaCompleted] = useState(() => {
-    // Check if captcha has been completed before
-    const completed = localStorage.getItem('captchaCompleted');
-    return completed === 'true';
+    // Clean up old captcha system
+    localStorage.removeItem('captchaCompleted');
+
+    // Check if captcha was completed within last 24 hours
+    const completedTimestamp = localStorage.getItem('captchaCompletedTimestamp');
+    if (!completedTimestamp) return false;
+
+    const now = Date.now();
+    const twentyFourHours = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    const elapsed = now - parseInt(completedTimestamp);
+
+    return elapsed < twentyFourHours;
   });
   const [injuredPlayers, setInjuredPlayers] = useState(() => {
     // Load injured players from localStorage
@@ -335,7 +344,7 @@ function App() {
   };
 
   const handleCaptchaSuccess = () => {
-    localStorage.setItem('captchaCompleted', 'true');
+    localStorage.setItem('captchaCompletedTimestamp', Date.now().toString());
     setCaptchaCompleted(true);
   };
 
