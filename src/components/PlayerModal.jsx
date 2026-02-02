@@ -129,10 +129,10 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b border-slate-200">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-4 flex-1">
-              <div className="flex flex-col items-center gap-2">
+        <div className="p-4 sm:p-6 border-b border-slate-200">
+          <div className="flex items-start justify-between gap-2 sm:gap-4">
+            <div className="flex items-start gap-2 sm:gap-4 flex-1 min-w-0">
+              <div className="flex flex-col items-center gap-2 flex-shrink-0">
                 <label className="cursor-pointer group relative" title="Click to change picture">
                   <input
                     type="file"
@@ -145,10 +145,10 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
                     <img
                       src={player.pictureUrl}
                       alt={player.name}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 group-hover:border-blue-300 transition-colors"
+                      className="w-16 h-16 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-slate-100 group-hover:border-blue-300 transition-colors"
                     />
                   ) : (
-                    <div className="w-24 h-24 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-3xl font-bold border-4 border-slate-100 group-hover:border-blue-300 transition-colors">
+                    <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-2xl sm:text-3xl font-bold border-4 border-slate-100 group-hover:border-blue-300 transition-colors">
                       {getInitials(player.name)}
                     </div>
                   )}
@@ -159,22 +159,22 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
                   </div>
                 </label>
                 {(player.height || player.weight) && (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 hidden sm:block">
                     {player.height && <span>{player.height}</span>}
                     {player.height && player.weight && <span> • </span>}
                     {player.weight && <span>{player.weight}</span>}
                   </p>
                 )}
               </div>
-              <div>
-                <h2 className="text-3xl font-bold text-slate-900 mb-2">{player.name}</h2>
-                <div className={`text-5xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]' : ''}`}>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xl sm:text-3xl font-bold text-slate-900 mb-1 sm:mb-2 truncate">{player.name}</h2>
+                <div className={`text-3xl sm:text-5xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]' : ''}`}>
                   {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
                 </div>
-                <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Overall Win Rate</p>
+                <p className="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wide">Overall Win Rate</p>
               </div>
             </div>
-            <div className="flex items-start gap-2 flex-shrink-0">
+            <div className="flex items-start gap-1 sm:gap-2 flex-shrink-0">
               {/* 3-dot menu */}
               <div className="relative">
                 <button
@@ -210,7 +210,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
               </div>
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-slate-600 text-3xl font-bold transition-colors p-1 min-w-[40px] flex items-center justify-center"
+                className="text-slate-400 hover:text-slate-600 text-3xl font-bold transition-colors p-1 w-10 h-10 flex items-center justify-center flex-shrink-0"
               >
                 ×
               </button>
