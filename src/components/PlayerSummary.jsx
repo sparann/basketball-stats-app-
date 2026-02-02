@@ -8,6 +8,7 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [timeFilter, setTimeFilter] = useState('allTime');
   const [showTimeFilter, setShowTimeFilter] = useState(false);
+  const [showSortBy, setShowSortBy] = useState(false);
 
   // Filter sessions based on time period
   const filteredSessions = useMemo(() => {
@@ -98,67 +99,92 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
     return 'All Time';
   };
 
+  const getSortByLabel = () => {
+    if (sortBy === 'winPercentage') return 'Win %';
+    if (sortBy === 'totalGames') return 'Total Games';
+    return 'Win %';
+  };
+
   return (
     <div className="mb-8">
       <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-6 mb-8">
         <div className="flex items-center justify-between gap-8 flex-wrap">
-          {/* Filter By */}
-          <div className="flex items-center gap-3 relative">
-            <span className="text-sm font-semibold text-slate-600 whitespace-nowrap">Filter by:</span>
-            <button
-              onClick={() => setShowTimeFilter(!showTimeFilter)}
-              className="px-4 py-2 bg-slate-50 border-2 border-slate-200 text-slate-700 rounded-xl font-semibold text-sm hover:shadow-md transition-all flex items-center gap-2"
-            >
-              {getTimeFilterLabel()}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {showTimeFilter && (
-              <div className="absolute top-full left-0 mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl z-10 min-w-[150px] overflow-hidden">
-                <button
-                  onClick={() => { setTimeFilter('week'); setShowTimeFilter(false); }}
-                  className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${timeFilter === 'week' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
-                >
-                  Week
-                </button>
-                <button
-                  onClick={() => { setTimeFilter('month'); setShowTimeFilter(false); }}
-                  className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${timeFilter === 'month' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
-                >
-                  Month
-                </button>
-                <button
-                  onClick={() => { setTimeFilter('year'); setShowTimeFilter(false); }}
-                  className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${timeFilter === 'year' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
-                >
-                  Year
-                </button>
-                <button
-                  onClick={() => { setTimeFilter('allTime'); setShowTimeFilter(false); }}
-                  className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${timeFilter === 'allTime' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
-                >
-                  All Time
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Heading */}
+          <h2 className="text-2xl font-bold text-slate-900">Player Standings</h2>
 
-          {/* Sort By */}
+          {/* Filter and Sort Dropdowns */}
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-sm font-semibold text-slate-600 whitespace-nowrap">Sort by:</span>
-            <button
-              onClick={() => setSortBy('winPercentage')}
-              className={`px-4 py-2 ${sortBy === 'winPercentage' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-50 border-2 border-slate-200 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
-            >
-              Win %
-            </button>
-            <button
-              onClick={() => setSortBy('totalGames')}
-              className={`px-4 py-2 ${sortBy === 'totalGames' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-50 border-2 border-slate-200 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
-            >
-              Total Games
-            </button>
+            {/* Filter By */}
+            <div className="flex items-center gap-2 relative">
+              <span className="text-sm font-semibold text-slate-600 whitespace-nowrap">Filter by:</span>
+              <button
+                onClick={() => setShowTimeFilter(!showTimeFilter)}
+                className="px-4 py-2 bg-slate-50 border-2 border-slate-200 text-slate-700 rounded-xl font-semibold text-sm hover:shadow-md transition-all flex items-center gap-2"
+              >
+                {getTimeFilterLabel()}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showTimeFilter && (
+                <div className="absolute top-full right-0 mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl z-10 min-w-[150px] overflow-hidden">
+                  <button
+                    onClick={() => { setTimeFilter('week'); setShowTimeFilter(false); }}
+                    className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${timeFilter === 'week' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
+                  >
+                    Week
+                  </button>
+                  <button
+                    onClick={() => { setTimeFilter('month'); setShowTimeFilter(false); }}
+                    className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${timeFilter === 'month' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
+                  >
+                    Month
+                  </button>
+                  <button
+                    onClick={() => { setTimeFilter('year'); setShowTimeFilter(false); }}
+                    className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${timeFilter === 'year' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
+                  >
+                    Year
+                  </button>
+                  <button
+                    onClick={() => { setTimeFilter('allTime'); setShowTimeFilter(false); }}
+                    className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${timeFilter === 'allTime' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
+                  >
+                    All Time
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Sort By */}
+            <div className="flex items-center gap-2 relative">
+              <span className="text-sm font-semibold text-slate-600 whitespace-nowrap">Sort by:</span>
+              <button
+                onClick={() => setShowSortBy(!showSortBy)}
+                className="px-4 py-2 bg-slate-50 border-2 border-slate-200 text-slate-700 rounded-xl font-semibold text-sm hover:shadow-md transition-all flex items-center gap-2"
+              >
+                {getSortByLabel()}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showSortBy && (
+                <div className="absolute top-full right-0 mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl z-10 min-w-[150px] overflow-hidden">
+                  <button
+                    onClick={() => { setSortBy('winPercentage'); setShowSortBy(false); }}
+                    className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${sortBy === 'winPercentage' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
+                  >
+                    Win %
+                  </button>
+                  <button
+                    onClick={() => { setSortBy('totalGames'); setShowSortBy(false); }}
+                    className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${sortBy === 'totalGames' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
+                  >
+                    Total Games
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
