@@ -62,16 +62,9 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
       return;
     }
 
-    if (!totalGames || parseInt(totalGames) <= 0) {
-      setMessage({ type: 'error', text: 'Please enter total games played' });
-      setIsSubmitting(false);
-      return;
-    }
-
     const sessionData = {
       date: sessionDate,
       location: sessionLocation,
-      totalGames: parseInt(totalGames),
       players: validPlayers.map((p) => ({
         name: p.name.trim(),
         gamesPlayed: parseInt(p.gamesPlayed),
@@ -79,6 +72,11 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
         notes: p.notes.trim()
       }))
     };
+
+    // Only include totalGames if it's provided
+    if (totalGames && parseInt(totalGames) > 0) {
+      sessionData.totalGames = parseInt(totalGames);
+    }
 
     for (const player of sessionData.players) {
       if (player.gamesWon > player.gamesPlayed) {
@@ -191,7 +189,7 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
           {/* Total Games */}
           <div className="space-y-2">
             <label className="block text-sm font-bold text-slate-700 uppercase tracking-wide">
-              Total Games Played
+              Total Games Played (Optional)
             </label>
             <input
               type="number"
@@ -200,9 +198,8 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
               placeholder="e.g., 10"
               className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
               min="1"
-              required
             />
-            <p className="text-xs text-slate-500">The total number of games played in this session (not per player)</p>
+            <p className="text-xs text-slate-500">If not filled out, will use the highest number of games played by any player in this session</p>
           </div>
 
           {/* Players */}
