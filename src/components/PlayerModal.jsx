@@ -174,12 +174,12 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
                       <div className="absolute inset-0 animate-ping opacity-20">
                         <div className="w-full h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full blur-xl"></div>
                       </div>
-                      <span className="absolute -top-3 -left-3 text-3xl animate-bounce" style={{ animationDelay: '0s' }}>✨</span>
-                      <span className="absolute -top-3 -right-3 text-3xl animate-bounce" style={{ animationDelay: '0.2s' }}>✨</span>
-                      <span className="absolute -bottom-3 -left-3 text-3xl animate-bounce" style={{ animationDelay: '0.4s' }}>✨</span>
-                      <span className="absolute -bottom-3 -right-3 text-3xl animate-bounce" style={{ animationDelay: '0.6s' }}>✨</span>
-                      <span className="absolute top-1/2 -left-6 text-2xl animate-pulse" style={{ animationDelay: '0.3s' }}>⭐</span>
-                      <span className="absolute top-1/2 -right-6 text-2xl animate-pulse" style={{ animationDelay: '0.7s' }}>⭐</span>
+                      <div className="absolute -top-2 -left-2 w-4 h-4 bg-yellow-400 rounded-full animate-bounce shadow-lg shadow-yellow-400" style={{ animationDelay: '0s' }}></div>
+                      <div className="absolute -top-2 -right-2 w-4 h-4 bg-amber-400 rounded-full animate-bounce shadow-lg shadow-amber-400" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-yellow-500 rounded-full animate-bounce shadow-lg shadow-yellow-500" style={{ animationDelay: '0.4s' }}></div>
+                      <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-amber-500 rounded-full animate-bounce shadow-lg shadow-amber-500" style={{ animationDelay: '0.6s' }}></div>
+                      <div className="absolute top-1/2 -left-4 w-3 h-3 bg-yellow-300 rounded-full animate-pulse shadow-md shadow-yellow-300" style={{ animationDelay: '0.3s' }}></div>
+                      <div className="absolute top-1/2 -right-4 w-3 h-3 bg-amber-300 rounded-full animate-pulse shadow-md shadow-amber-300" style={{ animationDelay: '0.7s' }}></div>
                     </>
                   )}
                   <div className={`text-5xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]' : ''}`}>
