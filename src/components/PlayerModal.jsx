@@ -110,8 +110,11 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
   };
 
   const getGradientColor = (color) => {
-    if (color === 'success') return 'from-green-600 to-emerald-600';
-    if (color === 'warning') return 'from-amber-600 to-orange-600';
+    if (color === 'perfect') return 'from-yellow-400 via-amber-500 to-yellow-400 animate-pulse';
+    if (color === 'excellent') return 'from-green-600 to-emerald-600';
+    if (color === 'good') return 'from-yellow-500 to-amber-500';
+    if (color === 'fair') return 'from-orange-500 to-orange-600';
+    if (color === 'poor') return 'from-red-600 to-red-700';
     if (color === 'default') return 'from-slate-600 to-slate-600';
     return 'from-blue-600 to-indigo-600';
   };

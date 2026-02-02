@@ -10,22 +10,31 @@ const PlayerCard = ({ player, rank, onClick }) => {
   const isActive = isPlayerActive(player.lastPlayed);
 
   const getGradientColor = (color) => {
-    if (color === 'success') return 'from-green-600 to-emerald-600';
-    if (color === 'warning') return 'from-amber-600 to-orange-600';
+    if (color === 'perfect') return 'from-yellow-400 via-amber-500 to-yellow-400 animate-pulse';
+    if (color === 'excellent') return 'from-green-600 to-emerald-600';
+    if (color === 'good') return 'from-yellow-500 to-amber-500';
+    if (color === 'fair') return 'from-orange-500 to-orange-600';
+    if (color === 'poor') return 'from-red-600 to-red-700';
     if (color === 'default') return 'from-slate-600 to-slate-600';
     return 'from-blue-600 to-indigo-600';
   };
 
   const getBadgeColor = (color) => {
-    if (color === 'success') return 'from-green-400 to-emerald-600';
-    if (color === 'warning') return 'from-amber-400 to-orange-600';
+    if (color === 'perfect') return 'from-yellow-300 to-amber-500 shadow-lg shadow-yellow-300';
+    if (color === 'excellent') return 'from-green-400 to-emerald-600';
+    if (color === 'good') return 'from-yellow-400 to-amber-600';
+    if (color === 'fair') return 'from-orange-400 to-orange-600';
+    if (color === 'poor') return 'from-red-500 to-red-700';
     if (color === 'default') return 'from-slate-400 to-slate-600';
     return 'from-blue-400 to-indigo-600';
   };
 
   const getBarColor = (color) => {
-    if (color === 'success') return 'from-green-600 to-emerald-500';
-    if (color === 'warning') return 'from-amber-600 to-orange-500';
+    if (color === 'perfect') return 'from-yellow-400 to-amber-500';
+    if (color === 'excellent') return 'from-green-600 to-emerald-500';
+    if (color === 'good') return 'from-yellow-500 to-amber-500';
+    if (color === 'fair') return 'from-orange-500 to-orange-600';
+    if (color === 'poor') return 'from-red-600 to-red-700';
     if (color === 'default') return 'from-slate-600 to-slate-500';
     return 'from-blue-600 to-indigo-500';
   };

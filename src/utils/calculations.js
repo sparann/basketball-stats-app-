@@ -28,9 +28,11 @@ export const formatWinPercentage = (percentage, gamesPlayed) => {
  */
 export const getWinPercentageColor = (percentage, gamesPlayed) => {
   if (gamesPlayed === 0) return 'default';
-  if (percentage > 0.7) return 'success';
-  if (percentage >= 0.5) return 'warning';
-  return 'danger';
+  if (percentage === 1) return 'perfect';
+  if (percentage > 0.75) return 'excellent';
+  if (percentage > 0.5) return 'good';
+  if (percentage > 0.25) return 'fair';
+  return 'poor';
 };
 
 /**
