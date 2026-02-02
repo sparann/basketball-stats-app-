@@ -71,7 +71,7 @@ const SessionLog = ({ sessions }) => {
                     <p className="text-2xl font-bold text-slate-900">{session.players.length}</p>
                   </div>
                   <div className="bg-slate-50 rounded-2xl p-3">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Games</p>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Total Games</p>
                     <p className="text-2xl font-bold text-slate-900">{totalGames}</p>
                   </div>
                 </div>
