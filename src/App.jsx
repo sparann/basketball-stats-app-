@@ -83,10 +83,11 @@ function App() {
           return {
             name: player.name,
             ...stats,
-            injured: injuredPlayers[player.name] || false,
-            pictureUrl: playerPictures[player.name] || '',
-            height: playerDetails[player.name]?.height || '',
-            weight: playerDetails[player.name]?.weight || ''
+            // Prioritize Supabase data, fallback to localStorage
+            injured: player.injured !== undefined ? player.injured : (injuredPlayers[player.name] || false),
+            pictureUrl: player.pictureUrl || playerPictures[player.name] || '',
+            height: player.height || playerDetails[player.name]?.height || '',
+            weight: player.weight || playerDetails[player.name]?.weight || ''
           };
         });
 
@@ -160,7 +161,7 @@ function App() {
     setCurrentView('summary');
   };
 
-  const handleUpdatePlayer = (updatedPlayer) => {
+  const handleUpdatePlayer = async (updatedPlayer) => {
     // Update injured status in localStorage
     const newInjuredPlayers = {
       ...injuredPlayers,
@@ -187,6 +188,25 @@ function App() {
     };
     setPlayerDetails(newPlayerDetails);
     localStorage.setItem('playerDetails', JSON.stringify(newPlayerDetails));
+
+    // Update Supabase if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const { error } = await supabase
+          .from('players')
+          .update({
+            injured: updatedPlayer.injured || false,
+            pictureUrl: updatedPlayer.pictureUrl || '',
+            height: updatedPlayer.height || '',
+            weight: updatedPlayer.weight || ''
+          })
+          .eq('name', updatedPlayer.name);
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error updating player in Supabase:', error);
+      }
+    }
 
     // Check if player exists or is new
     const playerExists = playerStats.some(player => player.name === updatedPlayer.name);
