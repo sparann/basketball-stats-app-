@@ -133,7 +133,7 @@ const PlayerCard = ({ player, rank, onClick }) => {
             );
           })}
         </div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mt-2">Recent Games</p>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mt-2">Recent Session Performance</p>
       </div>
     </div>
   );
