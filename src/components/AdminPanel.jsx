@@ -69,6 +69,7 @@ const AdminPanel = ({
               locations={locations}
               onSessionUpdated={onSessionAdded}
               onDeleteSession={onDeleteSession}
+              playerStats={playerStats}
             />
           </div>
         )}

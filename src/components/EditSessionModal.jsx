@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
-const EditSessionModal = ({ session, locations, onClose, onSessionUpdated }) => {
+const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playerStats }) => {
   const isEditing = !!session;
   const [sessionDate, setSessionDate] = useState(session?.date || '');
   const [sessionLocation, setSessionLocation] = useState(session?.location || '');
@@ -179,14 +179,19 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated }) => 
             {players.map((player, index) => (
               <div key={index} className="space-y-3 p-4 bg-slate-50 rounded-xl">
                 <div className="flex gap-3 items-start flex-wrap">
-                  <input
-                    type="text"
-                    placeholder="Player Name"
+                  <select
                     value={player.name}
                     onChange={(e) => updatePlayer(index, 'name', e.target.value)}
                     className="flex-1 min-w-[150px] px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
                     required
-                  />
+                  >
+                    <option value="">Select Player</option>
+                    {playerStats && playerStats.map((p) => (
+                      <option key={p.name} value={p.name}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-bold text-slate-600 px-1">Games Played</label>
                     <div className="flex items-center gap-2">

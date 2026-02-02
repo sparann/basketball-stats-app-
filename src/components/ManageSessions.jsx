@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import EditSessionModal from './EditSessionModal';
 
-const ManageSessions = ({ sessions, locations, onSessionUpdated, onDeleteSession }) => {
+const ManageSessions = ({ sessions, locations, onSessionUpdated, onDeleteSession, playerStats }) => {
   const [editingSession, setEditingSession] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -94,6 +94,7 @@ const ManageSessions = ({ sessions, locations, onSessionUpdated, onDeleteSession
           locations={locations}
           onClose={() => setShowAddModal(false)}
           onSessionUpdated={onSessionUpdated}
+          playerStats={playerStats}
         />
       )}
 
@@ -103,6 +104,7 @@ const ManageSessions = ({ sessions, locations, onSessionUpdated, onDeleteSession
           locations={locations}
           onClose={() => setEditingSession(null)}
           onSessionUpdated={onSessionUpdated}
+          playerStats={playerStats}
         />
       )}
     </div>
