@@ -81,7 +81,7 @@ const PlayerCard = ({ player, rank, onClick }) => {
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2" title="Haven't played in over 30 days">
+                <div className="flex items-center gap-2" title="Hasn't played in over 14 days">
                   <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                     Away
