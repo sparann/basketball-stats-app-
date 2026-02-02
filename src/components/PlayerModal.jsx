@@ -12,6 +12,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
 
   const [showMenu, setShowMenu] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [sessionHistoryView, setSessionHistoryView] = useState('table');
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -251,33 +252,115 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
 
         {/* Session History */}
         <div className="p-6 border-b border-slate-200">
-          <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4">Session History</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
-            {player.sessions.slice().reverse().map((session, index) => {
-              const sessionColor = getWinPercentageColor(session.winPercentage, session.gamesPlayed);
-              const sessionGradient = getGradientColor(sessionColor);
-
-              return (
-                <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-16 h-16 bg-gradient-to-br ${sessionGradient} rounded-xl flex items-center justify-center`}>
-                      <span className="text-white font-bold text-sm">{formatWinPercentage(session.winPercentage, session.gamesPlayed)}</span>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">{formatDate(session.date)}</p>
-                      <p className="text-sm text-slate-500">
-                        {session.gamesWon} wins out of {session.gamesPlayed} games
-                        {session.location && <span> • {session.location}</span>}
-                      </p>
-                    </div>
-                  </div>
-                  {session.notes && (
-                    <p className="text-sm text-slate-500 italic max-w-xs truncate">{session.notes}</p>
-                  )}
-                </div>
-              );
-            })}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Session History</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSessionHistoryView('table')}
+                className={`px-3 py-1 ${sessionHistoryView === 'table' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-600'} rounded-lg font-semibold text-xs hover:shadow-md transition-all`}
+              >
+                Table
+              </button>
+              <button
+                onClick={() => setSessionHistoryView('graph')}
+                className={`px-3 py-1 ${sessionHistoryView === 'graph' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-600'} rounded-lg font-semibold text-xs hover:shadow-md transition-all`}
+              >
+                Graph
+              </button>
+            </div>
           </div>
+
+          {sessionHistoryView === 'table' ? (
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {player.sessions.slice().reverse().map((session, index) => {
+                const sessionColor = getWinPercentageColor(session.winPercentage, session.gamesPlayed);
+                const sessionGradient = getGradientColor(sessionColor);
+
+                return (
+                  <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-16 h-16 bg-gradient-to-br ${sessionGradient} rounded-xl flex items-center justify-center`}>
+                        <span className="text-white font-bold text-sm">{formatWinPercentage(session.winPercentage, session.gamesPlayed)}</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-900">{formatDate(session.date)}</p>
+                        <p className="text-sm text-slate-500">
+                          {session.gamesWon} wins out of {session.gamesPlayed} games
+                          {session.location && <span> • {session.location}</span>}
+                        </p>
+                      </div>
+                    </div>
+                    {session.notes && (
+                      <p className="text-sm text-slate-500 italic max-w-xs truncate">{session.notes}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-slate-50 rounded-xl p-4">
+              <svg className="w-full" height="200" viewBox="0 0 600 200">
+                {/* Grid lines */}
+                <line x1="50" y1="20" x2="50" y2="180" stroke="#cbd5e1" strokeWidth="2" />
+                <line x1="50" y1="180" x2="580" y2="180" stroke="#cbd5e1" strokeWidth="2" />
+                {[0, 25, 50, 75, 100].map((percent) => (
+                  <g key={percent}>
+                    <line x1="45" y1={180 - percent * 1.6} x2="580" y2={180 - percent * 1.6} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4" />
+                    <text x="35" y={184 - percent * 1.6} fontSize="10" fill="#64748b" textAnchor="end">{percent}%</text>
+                  </g>
+                ))}
+
+                {/* Plot line */}
+                {player.sessions.length > 1 && (
+                  <>
+                    <polyline
+                      points={player.sessions.map((session, i) => {
+                        const x = 50 + (i * (530 / Math.max(player.sessions.length - 1, 1)));
+                        const y = 180 - (session.winPercentage * 160);
+                        return `${x},${y}`;
+                      }).join(' ')}
+                      fill="none"
+                      stroke="url(#lineGradient)"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    {/* Data points */}
+                    {player.sessions.map((session, i) => {
+                      const x = 50 + (i * (530 / Math.max(player.sessions.length - 1, 1)));
+                      const y = 180 - (session.winPercentage * 160);
+                      const sessionColor = getWinPercentageColor(session.winPercentage, session.gamesPlayed);
+                      const fillColor = sessionColor === 'perfect' ? '#fbbf24' :
+                                       sessionColor === 'excellent' ? '#059669' :
+                                       sessionColor === 'good' ? '#eab308' :
+                                       sessionColor === 'fair' ? '#f97316' :
+                                       sessionColor === 'poor' ? '#dc2626' : '#64748b';
+                      return (
+                        <g key={i}>
+                          <circle cx={x} cy={y} r="5" fill={fillColor} stroke="white" strokeWidth="2" />
+                          <title>{formatDate(session.date)}: {formatWinPercentage(session.winPercentage, session.gamesPlayed)}</title>
+                        </g>
+                      );
+                    })}
+                  </>
+                )}
+
+                {/* Gradient for line */}
+                <defs>
+                  <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#6366f1" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              {player.sessions.length === 0 && (
+                <p className="text-center text-slate-500 text-sm py-16">No session data available</p>
+              )}
+              {player.sessions.length === 1 && (
+                <p className="text-center text-slate-500 text-sm py-16">Need at least 2 sessions to show graph</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Best Location */}
