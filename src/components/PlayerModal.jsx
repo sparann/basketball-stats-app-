@@ -168,8 +168,23 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
               </div>
               <div>
                 <h2 className="text-3xl font-bold text-slate-900 mb-2">{player.name}</h2>
-                <div className={`text-5xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent`}>
-                  {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
+                <div className={`relative ${winPercentageColor === 'perfect' ? 'inline-block' : ''}`}>
+                  {winPercentageColor === 'perfect' && (
+                    <>
+                      <div className="absolute inset-0 animate-ping opacity-20">
+                        <div className="w-full h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full blur-xl"></div>
+                      </div>
+                      <span className="absolute -top-3 -left-3 text-3xl animate-bounce" style={{ animationDelay: '0s' }}>✨</span>
+                      <span className="absolute -top-3 -right-3 text-3xl animate-bounce" style={{ animationDelay: '0.2s' }}>✨</span>
+                      <span className="absolute -bottom-3 -left-3 text-3xl animate-bounce" style={{ animationDelay: '0.4s' }}>✨</span>
+                      <span className="absolute -bottom-3 -right-3 text-3xl animate-bounce" style={{ animationDelay: '0.6s' }}>✨</span>
+                      <span className="absolute top-1/2 -left-6 text-2xl animate-pulse" style={{ animationDelay: '0.3s' }}>⭐</span>
+                      <span className="absolute top-1/2 -right-6 text-2xl animate-pulse" style={{ animationDelay: '0.7s' }}>⭐</span>
+                    </>
+                  )}
+                  <div className={`text-5xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]' : ''}`}>
+                    {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
+                  </div>
                 </div>
                 <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Overall Win Rate</p>
               </div>

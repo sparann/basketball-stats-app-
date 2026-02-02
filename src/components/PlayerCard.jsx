@@ -98,8 +98,23 @@ const PlayerCard = ({ player, rank, onClick }) => {
         </div>
 
         <div className="mb-6">
-          <div className={`text-6xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent mb-2`}>
-            {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
+          <div className={`relative ${winPercentageColor === 'perfect' ? 'flex items-center justify-center' : ''}`}>
+            {winPercentageColor === 'perfect' && (
+              <>
+                <div className="absolute inset-0 animate-ping opacity-20">
+                  <div className="w-full h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full blur-xl"></div>
+                </div>
+                <span className="absolute -top-2 -left-2 text-2xl animate-bounce" style={{ animationDelay: '0s' }}>✨</span>
+                <span className="absolute -top-2 -right-2 text-2xl animate-bounce" style={{ animationDelay: '0.2s' }}>✨</span>
+                <span className="absolute -bottom-2 -left-2 text-2xl animate-bounce" style={{ animationDelay: '0.4s' }}>✨</span>
+                <span className="absolute -bottom-2 -right-2 text-2xl animate-bounce" style={{ animationDelay: '0.6s' }}>✨</span>
+                <span className="absolute top-1/2 -left-4 text-xl animate-pulse" style={{ animationDelay: '0.3s' }}>⭐</span>
+                <span className="absolute top-1/2 -right-4 text-xl animate-pulse" style={{ animationDelay: '0.7s' }}>⭐</span>
+              </>
+            )}
+            <div className={`text-6xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent mb-2 ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]' : ''}`}>
+              {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
+            </div>
           </div>
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Win Rate</p>
         </div>
