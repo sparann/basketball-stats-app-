@@ -5,9 +5,9 @@ const Header = ({ currentView, onViewChange, isAdmin }) => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-5xl font-extrabold text-white tracking-tight mb-2">
-              Basketball Win Tracker
+              The Win Tracker
             </h1>
-            <p className="text-slate-300 font-semibold">Tracking Pickup Games. Courtesy of: Wyatt</p>
+            <p className="text-slate-300 font-semibold">Tracking Basketball Pickup Games</p>
           </div>
         </div>
 
