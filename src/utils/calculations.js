@@ -127,9 +127,10 @@ export const sortPlayers = (players, sortBy) => {
 /**
  * Format date string
  * @param {string} dateString - Date in YYYY-MM-DD format
- * @returns {string} Formatted date
+ * @returns {string} Formatted date or N/A
  */
 export const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', {
     month: 'short',
@@ -144,6 +145,7 @@ export const formatDate = (dateString) => {
  * @returns {boolean} True if active
  */
 export const isPlayerActive = (lastPlayedDate) => {
+  if (!lastPlayedDate) return false;
   const lastPlayed = new Date(lastPlayedDate);
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
