@@ -47,7 +47,7 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
 
   const sortedPlayers = sortPlayers(filteredPlayerStats, sortBy);
 
-  // Calculate ranks with tie handling
+  // Calculate ranks with tie handling (dense ranking)
   const playersWithRanks = useMemo(() => {
     let currentRank = 1;
     return sortedPlayers.map((player, index) => {
@@ -58,7 +58,7 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
           : player.totalGamesPlayed === prevPlayer.totalGamesPlayed;
 
         if (!isTied) {
-          currentRank = index + 1;
+          currentRank++;
         }
       }
       return { ...player, rank: currentRank };

@@ -21,13 +21,13 @@ const SessionModal = ({ session, onClose }) => {
   const topPerformers = playersWithWinRate.filter(p => p.winPercentage === topWinPercentage);
   const avgWinRate = playersWithWinRate.reduce((sum, p) => sum + p.winPercentage, 0) / playersWithWinRate.length;
 
-  // Calculate ranks with tie handling
+  // Calculate ranks with tie handling (dense ranking)
   let currentRank = 1;
   const playersWithRanks = playersWithWinRate.map((player, index) => {
     if (index > 0) {
       const prevPlayer = playersWithWinRate[index - 1];
       if (player.winPercentage !== prevPlayer.winPercentage) {
-        currentRank = index + 1;
+        currentRank++;
       }
     }
     return { ...player, rank: currentRank };
