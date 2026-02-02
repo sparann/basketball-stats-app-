@@ -4,8 +4,9 @@ const Header = ({ currentView, onViewChange, isAdmin }) => {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
+            <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1">Wyatt's</p>
             <h1 className="text-5xl font-extrabold text-white tracking-tight mb-2">
-              The Win Tracker
+              Win Tracker
             </h1>
             <p className="text-slate-300 font-semibold">Tracking Basketball Pickup Games</p>
           </div>
