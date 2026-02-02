@@ -50,6 +50,56 @@ function App() {
     return stored ? JSON.parse(stored) : [];
   });
 
+  const migrateLocalStorageToSupabase = async (playersData) => {
+    // Migrate localStorage data to Supabase for players that have local data but empty Supabase data
+    try {
+      const updates = [];
+
+      for (const player of playersData) {
+        const hasLocalData =
+          playerPictures[player.name] ||
+          playerDetails[player.name]?.height ||
+          playerDetails[player.name]?.weight ||
+          injuredPlayers[player.name] !== undefined;
+
+        const needsUpdate =
+          !player.pictureUrl && playerPictures[player.name] ||
+          !player.height && playerDetails[player.name]?.height ||
+          !player.weight && playerDetails[player.name]?.weight ||
+          player.injured === undefined && injuredPlayers[player.name] !== undefined;
+
+        if (hasLocalData && needsUpdate) {
+          updates.push({
+            name: player.name,
+            injured: injuredPlayers[player.name] !== undefined ? injuredPlayers[player.name] : (player.injured || false),
+            pictureUrl: playerPictures[player.name] || player.pictureUrl || '',
+            height: playerDetails[player.name]?.height || player.height || '',
+            weight: playerDetails[player.name]?.weight || player.weight || ''
+          });
+        }
+      }
+
+      // Batch update players with localStorage data
+      for (const update of updates) {
+        await supabase
+          .from('players')
+          .update({
+            injured: update.injured,
+            pictureUrl: update.pictureUrl,
+            height: update.height,
+            weight: update.weight
+          })
+          .eq('name', update.name);
+      }
+
+      if (updates.length > 0) {
+        console.log(`Migrated ${updates.length} players from localStorage to Supabase`);
+      }
+    } catch (error) {
+      console.error('Error migrating localStorage to Supabase:', error);
+    }
+  };
+
   const loadData = async () => {
     setIsLoading(true);
 
@@ -107,6 +157,9 @@ function App() {
         });
 
         setPlayerStats(allPlayers);
+
+        // Migrate localStorage data to Supabase (one-time sync)
+        await migrateLocalStorageToSupabase(playersData);
       } else {
         // Use local JSON data (for development)
         setSessions(statsData.sessions);
