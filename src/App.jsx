@@ -54,6 +54,14 @@ function App() {
 
         setSessions(sessionsData);
 
+        // Extract unique locations from sessions and merge with existing locations
+        const sessionLocations = [...new Set(sessionsData.map(s => s.location).filter(Boolean))];
+        const mergedLocations = [...new Set([...locations, ...sessionLocations])];
+        if (mergedLocations.length !== locations.length) {
+          setLocations(mergedLocations);
+          localStorage.setItem('locations', JSON.stringify(mergedLocations));
+        }
+
         // Calculate stats from sessions
         const sessionStats = aggregatePlayerStats(sessionsData);
         const sessionStatsMap = {};
@@ -86,6 +94,15 @@ function App() {
       } else {
         // Use local JSON data (for development)
         setSessions(statsData.sessions);
+
+        // Extract unique locations from sessions and merge with existing locations
+        const sessionLocations = [...new Set(statsData.sessions.map(s => s.location).filter(Boolean))];
+        const mergedLocations = [...new Set([...locations, ...sessionLocations])];
+        if (mergedLocations.length !== locations.length) {
+          setLocations(mergedLocations);
+          localStorage.setItem('locations', JSON.stringify(mergedLocations));
+        }
+
         const aggregated = aggregatePlayerStats(statsData.sessions);
         const withExtras = aggregated.map(player => ({
           ...player,
@@ -100,6 +117,15 @@ function App() {
       console.error('Error loading data:', error);
       // Fallback to local data on error
       setSessions(statsData.sessions);
+
+      // Extract unique locations from sessions and merge with existing locations
+      const sessionLocations = [...new Set(statsData.sessions.map(s => s.location).filter(Boolean))];
+      const mergedLocations = [...new Set([...locations, ...sessionLocations])];
+      if (mergedLocations.length !== locations.length) {
+        setLocations(mergedLocations);
+        localStorage.setItem('locations', JSON.stringify(mergedLocations));
+      }
+
       const aggregated = aggregatePlayerStats(statsData.sessions);
       const withExtras = aggregated.map(player => ({
         ...player,
