@@ -55,33 +55,57 @@ function App() {
     try {
       const updates = [];
 
+      console.log('🔄 Starting migration check...');
+      console.log('📦 localStorage data:', {
+        pictures: playerPictures,
+        details: playerDetails,
+        injured: injuredPlayers
+      });
+
       for (const player of playersData) {
-        const hasLocalData =
-          playerPictures[player.name] ||
-          playerDetails[player.name]?.height ||
-          playerDetails[player.name]?.weight ||
-          injuredPlayers[player.name] !== undefined;
+        const localPicture = playerPictures[player.name];
+        const localHeight = playerDetails[player.name]?.height;
+        const localWeight = playerDetails[player.name]?.weight;
+        const localInjured = injuredPlayers[player.name];
+
+        console.log(`👤 Checking ${player.name}:`, {
+          supabase: {
+            pictureUrl: player.pictureUrl,
+            height: player.height,
+            weight: player.weight,
+            injured: player.injured
+          },
+          localStorage: {
+            picture: localPicture,
+            height: localHeight,
+            weight: localWeight,
+            injured: localInjured
+          }
+        });
 
         const needsUpdate =
-          !player.pictureUrl && playerPictures[player.name] ||
-          !player.height && playerDetails[player.name]?.height ||
-          !player.weight && playerDetails[player.name]?.weight ||
-          player.injured === undefined && injuredPlayers[player.name] !== undefined;
+          (!player.pictureUrl && localPicture) ||
+          (!player.height && localHeight) ||
+          (!player.weight && localWeight) ||
+          (player.injured === undefined && localInjured !== undefined);
 
-        if (hasLocalData && needsUpdate) {
-          updates.push({
+        if (needsUpdate) {
+          const updateData = {
             name: player.name,
-            injured: injuredPlayers[player.name] !== undefined ? injuredPlayers[player.name] : (player.injured || false),
-            pictureUrl: playerPictures[player.name] || player.pictureUrl || '',
-            height: playerDetails[player.name]?.height || player.height || '',
-            weight: playerDetails[player.name]?.weight || player.weight || ''
-          });
+            injured: localInjured !== undefined ? localInjured : (player.injured || false),
+            pictureUrl: localPicture || player.pictureUrl || '',
+            height: localHeight || player.height || '',
+            weight: localWeight || player.weight || ''
+          };
+
+          console.log(`✅ Will migrate ${player.name}:`, updateData);
+          updates.push(updateData);
         }
       }
 
       // Batch update players with localStorage data
       for (const update of updates) {
-        await supabase
+        const { error } = await supabase
           .from('players')
           .update({
             injured: update.injured,
@@ -90,13 +114,23 @@ function App() {
             weight: update.weight
           })
           .eq('name', update.name);
+
+        if (error) {
+          console.error(`❌ Error updating ${update.name}:`, error);
+        } else {
+          console.log(`✅ Successfully migrated ${update.name}`);
+        }
       }
 
       if (updates.length > 0) {
-        console.log(`Migrated ${updates.length} players from localStorage to Supabase`);
+        console.log(`🎉 Migrated ${updates.length} players from localStorage to Supabase`);
+        return true; // Signal that migration happened
       }
+
+      return false;
     } catch (error) {
-      console.error('Error migrating localStorage to Supabase:', error);
+      console.error('❌ Error migrating localStorage to Supabase:', error);
+      return false;
     }
   };
 
@@ -159,7 +193,41 @@ function App() {
         setPlayerStats(allPlayers);
 
         // Migrate localStorage data to Supabase (one-time sync)
-        await migrateLocalStorageToSupabase(playersData);
+        const didMigrate = await migrateLocalStorageToSupabase(playersData);
+
+        // If migration happened, reload data from Supabase to get updated values
+        if (didMigrate) {
+          console.log('🔄 Reloading data after migration...');
+          const { data: updatedPlayers, error: reloadError } = await supabase
+            .from('players')
+            .select('*')
+            .order('name', { ascending: true });
+
+          if (!reloadError && updatedPlayers) {
+            const reloadedPlayers = updatedPlayers.map(player => {
+              const stats = sessionStatsMap[player.name] || {
+                totalGamesPlayed: 0,
+                totalGamesWon: 0,
+                sessionsAttended: 0,
+                overallWinPercentage: 0,
+                lastPlayed: null,
+                sessions: []
+              };
+
+              return {
+                name: player.name,
+                ...stats,
+                injured: player.injured || false,
+                pictureUrl: player.pictureUrl || '',
+                height: player.height || '',
+                weight: player.weight || ''
+              };
+            });
+
+            setPlayerStats(reloadedPlayers);
+            console.log('✅ Data reloaded successfully');
+          }
+        }
       } else {
         // Use local JSON data (for development)
         setSessions(statsData.sessions);
