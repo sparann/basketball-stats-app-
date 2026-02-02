@@ -94,12 +94,12 @@ const SessionModal = ({ session, onClose }) => {
               <p className="text-3xl font-bold text-slate-900">{totalGames}</p>
             </div>
             <div className="bg-white rounded-2xl p-4">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Avg Games/Player</p>
-              <p className="text-3xl font-bold text-slate-900">{avgGamesPerPlayer}</p>
-            </div>
-            <div className="bg-white rounded-2xl p-4">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Players</p>
               <p className="text-3xl font-bold text-slate-900">{session.players.length}</p>
+            </div>
+            <div className="bg-white rounded-2xl p-4">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Avg Games/Player</p>
+              <p className="text-3xl font-bold text-slate-900">{avgGamesPerPlayer}</p>
             </div>
             <div className="bg-white rounded-2xl p-4">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Avg Win Rate</p>
