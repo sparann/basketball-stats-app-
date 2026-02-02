@@ -6,12 +6,15 @@ const Captcha = ({ onSuccess }) => {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'error' or 'success'
 
-  const players = [
-    { id: 'wyatt', name: 'Wyatt', image: '/captcha/wyatt.png' },
-    { id: 'player1', name: 'Player 1', image: '/captcha/player1.png' },
-    { id: 'player2', name: 'Player 2', image: '/captcha/player2.png' },
-    { id: 'player3', name: 'Player 3', image: '/captcha/player3.png' }
-  ].sort(() => Math.random() - 0.5); // Randomize order
+  // Randomize order only once on mount
+  const [players] = useState(() =>
+    [
+      { id: 'wyatt', name: 'Wyatt', image: '/captcha/wyatt.png' },
+      { id: 'player1', name: 'Player 1', image: '/captcha/player1.png' },
+      { id: 'player2', name: 'Player 2', image: '/captcha/player2.png' },
+      { id: 'player3', name: 'Player 3', image: '/captcha/player3.png' }
+    ].sort(() => Math.random() - 0.5)
+  );
 
   const handleConfirm = () => {
     if (!selectedPlayer) {
