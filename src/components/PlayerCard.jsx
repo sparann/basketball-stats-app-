@@ -10,7 +10,7 @@ const PlayerCard = ({ player, rank, onClick }) => {
   const isActive = isPlayerActive(player.lastPlayed);
 
   const getGradientColor = (color) => {
-    if (color === 'perfect') return 'from-yellow-300 via-amber-400 to-yellow-300 animate-pulse';
+    if (color === 'perfect') return 'from-yellow-400 via-amber-500 to-yellow-400';
     if (color === 'excellent') return 'from-green-600 to-emerald-600';
     if (color === 'good') return 'from-yellow-500 to-amber-500';
     if (color === 'fair') return 'from-orange-500 to-orange-600';
@@ -98,20 +98,8 @@ const PlayerCard = ({ player, rank, onClick }) => {
         </div>
 
         <div className="mb-6">
-          <div className={`relative ${winPercentageColor === 'perfect' ? 'flex items-center justify-center' : ''}`}>
-            {winPercentageColor === 'perfect' && (
-              <>
-                <div className="absolute inset-0 animate-ping opacity-30">
-                  <div className="w-full h-full bg-gradient-to-r from-yellow-300 to-amber-400 rounded-full blur-2xl"></div>
-                </div>
-                <div className="absolute inset-0 animate-pulse opacity-40">
-                  <div className="w-full h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full blur-xl"></div>
-                </div>
-              </>
-            )}
-            <div className={`text-6xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent mb-2 ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_25px_rgba(251,191,36,0.8)]' : ''}`}>
-              {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
-            </div>
+          <div className={`text-6xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent mb-2 ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]' : ''}`}>
+            {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
           </div>
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Win Rate</p>
         </div>

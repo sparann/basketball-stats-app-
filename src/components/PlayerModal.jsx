@@ -110,7 +110,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
   };
 
   const getGradientColor = (color) => {
-    if (color === 'perfect') return 'from-yellow-300 via-amber-400 to-yellow-300 animate-pulse';
+    if (color === 'perfect') return 'from-yellow-400 via-amber-500 to-yellow-400';
     if (color === 'excellent') return 'from-green-600 to-emerald-600';
     if (color === 'good') return 'from-yellow-500 to-amber-500';
     if (color === 'fair') return 'from-orange-500 to-orange-600';
@@ -168,20 +168,8 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
               </div>
               <div>
                 <h2 className="text-3xl font-bold text-slate-900 mb-2">{player.name}</h2>
-                <div className={`relative ${winPercentageColor === 'perfect' ? 'inline-block' : ''}`}>
-                  {winPercentageColor === 'perfect' && (
-                    <>
-                      <div className="absolute inset-0 animate-ping opacity-30">
-                        <div className="w-full h-full bg-gradient-to-r from-yellow-300 to-amber-400 rounded-full blur-2xl"></div>
-                      </div>
-                      <div className="absolute inset-0 animate-pulse opacity-40">
-                        <div className="w-full h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full blur-xl"></div>
-                      </div>
-                    </>
-                  )}
-                  <div className={`text-5xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_30px_rgba(251,191,36,0.8)]' : ''}`}>
-                    {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
-                  </div>
+                <div className={`text-5xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]' : ''}`}>
+                  {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
                 </div>
                 <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Overall Win Rate</p>
               </div>
