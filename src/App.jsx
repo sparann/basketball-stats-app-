@@ -4,6 +4,7 @@ import PlayerSummary from './components/PlayerSummary';
 import SessionLog from './components/SessionLog';
 import AdminLogin from './components/AdminLogin';
 import AdminPanel from './components/AdminPanel';
+import Captcha from './components/Captcha';
 import { aggregatePlayerStats } from './utils/calculations';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import statsData from './data/stats.json';
@@ -14,6 +15,11 @@ function App() {
   const [sessions, setSessions] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [captchaCompleted, setCaptchaCompleted] = useState(() => {
+    // Check if captcha has been completed before
+    const completed = localStorage.getItem('captchaCompleted');
+    return completed === 'true';
+  });
   const [injuredPlayers, setInjuredPlayers] = useState(() => {
     // Load injured players from localStorage
     const stored = localStorage.getItem('injuredPlayers');
@@ -327,6 +333,16 @@ function App() {
     // Reload data from Supabase to get updated list
     await loadData();
   };
+
+  const handleCaptchaSuccess = () => {
+    localStorage.setItem('captchaCompleted', 'true');
+    setCaptchaCompleted(true);
+  };
+
+  // Show captcha first if not completed
+  if (!captchaCompleted) {
+    return <Captcha onSuccess={handleCaptchaSuccess} />;
+  }
 
   if (isLoading) {
     return (
