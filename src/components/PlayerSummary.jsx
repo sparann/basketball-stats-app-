@@ -7,7 +7,6 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
   const [sortBy, setSortBy] = useState('winPercentage');
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [timeFilter, setTimeFilter] = useState('allTime');
-  const [showTimeFilter, setShowTimeFilter] = useState(false);
 
   // Filter sessions based on time period
   const filteredSessions = useMemo(() => {
@@ -101,62 +100,34 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
   return (
     <div className="mb-8">
       <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-6 mb-8">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          {/* Time Period Filter with Dropdown */}
-          <div className="relative">
+        <div className="flex items-center gap-8 flex-wrap">
+          {/* Filter By */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-semibold text-slate-600 whitespace-nowrap">Filter by:</span>
             <button
-              onClick={() => setShowTimeFilter(!showTimeFilter)}
-              className="px-4 py-2 bg-slate-50 border-2 border-slate-200 text-slate-700 rounded-xl font-semibold text-sm hover:shadow-md transition-all flex items-center gap-2"
+              onClick={() => setTimeFilter('week')}
+              className={`px-4 py-2 ${timeFilter === 'week' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-50 border-2 border-slate-200 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              {getTimeFilterLabel()}
+              Week
             </button>
-
-            {showTimeFilter && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowTimeFilter(false)}></div>
-                <div className="absolute left-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-20">
-                  <button
-                    onClick={() => {
-                      setTimeFilter('week');
-                      setShowTimeFilter(false);
-                    }}
-                    className={`w-full px-4 py-2 text-left text-sm font-semibold ${timeFilter === 'week' ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                  >
-                    Week
-                  </button>
-                  <button
-                    onClick={() => {
-                      setTimeFilter('month');
-                      setShowTimeFilter(false);
-                    }}
-                    className={`w-full px-4 py-2 text-left text-sm font-semibold ${timeFilter === 'month' ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                  >
-                    Month
-                  </button>
-                  <button
-                    onClick={() => {
-                      setTimeFilter('year');
-                      setShowTimeFilter(false);
-                    }}
-                    className={`w-full px-4 py-2 text-left text-sm font-semibold ${timeFilter === 'year' ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                  >
-                    Year
-                  </button>
-                  <button
-                    onClick={() => {
-                      setTimeFilter('allTime');
-                      setShowTimeFilter(false);
-                    }}
-                    className={`w-full px-4 py-2 text-left text-sm font-semibold ${timeFilter === 'allTime' ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                  >
-                    All Time
-                  </button>
-                </div>
-              </>
-            )}
+            <button
+              onClick={() => setTimeFilter('month')}
+              className={`px-4 py-2 ${timeFilter === 'month' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-50 border-2 border-slate-200 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
+            >
+              Month
+            </button>
+            <button
+              onClick={() => setTimeFilter('year')}
+              className={`px-4 py-2 ${timeFilter === 'year' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-50 border-2 border-slate-200 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
+            >
+              Year
+            </button>
+            <button
+              onClick={() => setTimeFilter('allTime')}
+              className={`px-4 py-2 ${timeFilter === 'allTime' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-50 border-2 border-slate-200 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
+            >
+              All Time
+            </button>
           </div>
 
           {/* Sort By */}
