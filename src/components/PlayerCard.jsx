@@ -5,8 +5,9 @@ import {
   isPlayerActive
 } from '../utils/calculations';
 
-const PlayerCard = ({ player, rank, onClick }) => {
-  const winPercentageColor = getWinPercentageColor(player.overallWinPercentage, player.totalGamesPlayed);
+const PlayerCard = ({ player, rank, onClick, showAdjusted = true, leagueAverage = 0.5 }) => {
+  const displayPercentage = showAdjusted ? player.adjustedWinPercentage : player.rawWinPercentage;
+  const winPercentageColor = getWinPercentageColor(displayPercentage, player.totalGamesPlayed);
   const isActive = isPlayerActive(player.lastPlayed);
 
   const getGradientColor = (color) => {
@@ -81,7 +82,7 @@ const PlayerCard = ({ player, rank, onClick }) => {
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2" title="Hasn't played in over 14 days">
+                <div className="flex items-center gap-2" title="Hasn't played in over 30 days">
                   <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                     Away
@@ -97,11 +98,28 @@ const PlayerCard = ({ player, rank, onClick }) => {
           )}
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 group/percentage relative">
           <div className={`text-6xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent mb-2 ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]' : ''}`}>
-            {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
+            {formatWinPercentage(displayPercentage, player.totalGamesPlayed)}
           </div>
-          <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Win Rate</p>
+          <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+            {showAdjusted ? 'Adjusted Win Rate' : 'Raw Win Rate'}
+          </p>
+
+          {/* Tooltip on hover */}
+          {showAdjusted && player.rawWinPercentage !== displayPercentage && (
+            <div className="invisible group-hover/percentage:visible absolute left-0 top-full mt-2 w-64 bg-slate-900 text-white text-xs p-3 rounded-xl shadow-xl z-50">
+              <p className="mb-1">
+                <span className="font-bold">Raw Win%:</span> {formatWinPercentage(player.rawWinPercentage, player.totalGamesPlayed)}
+              </p>
+              <p className="mb-1">
+                <span className="font-bold">Adjusted Win%:</span> {formatWinPercentage(displayPercentage, player.totalGamesPlayed)}
+              </p>
+              <p className="text-slate-300 mt-2">
+                Calculated with Bayesian averaging using {Math.round(leagueAverage * 100)}% league average × 15 phantom games to reduce small sample bias.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">

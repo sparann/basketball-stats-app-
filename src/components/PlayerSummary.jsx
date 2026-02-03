@@ -1,14 +1,19 @@
 import { useState, useMemo } from 'react';
 import PlayerCard from './PlayerCard';
 import PlayerModal from './PlayerModal';
-import { sortPlayers, isPlayerActive, aggregatePlayerStats } from '../utils/calculations';
+import {
+  aggregatePlayerStats,
+  calculateLeagueAverage,
+  calculateAdjustedWinPercentage,
+  calculateMinimumGamesThreshold,
+  categorizePlayersByStanding
+} from '../utils/calculations';
 
 const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
-  const [sortBy, setSortBy] = useState('winPercentage');
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [timeFilter, setTimeFilter] = useState('allTime');
+  const [showAdjusted, setShowAdjusted] = useState(true);
   const [showTimeFilter, setShowTimeFilter] = useState(false);
-  const [showSortBy, setShowSortBy] = useState(false);
 
   // Filter sessions based on time period
   const filteredSessions = useMemo(() => {
@@ -46,25 +51,66 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
     });
   }, [filteredSessions, timeFilter, players]);
 
-  const sortedPlayers = sortPlayers(filteredPlayerStats, sortBy);
+  // Calculate league stats
+  const leagueAverage = useMemo(() =>
+    calculateLeagueAverage(filteredPlayerStats),
+    [filteredPlayerStats]
+  );
 
-  // Calculate ranks with tie handling (dense ranking)
-  const playersWithRanks = useMemo(() => {
+  const minimumGames = useMemo(() =>
+    calculateMinimumGamesThreshold(filteredPlayerStats),
+    [filteredPlayerStats]
+  );
+
+  // Add adjusted win percentage to all players
+  const playersWithAdjusted = useMemo(() => {
+    return filteredPlayerStats.map(player => ({
+      ...player,
+      adjustedWinPercentage: calculateAdjustedWinPercentage(
+        player.totalGamesWon,
+        player.totalGamesPlayed,
+        leagueAverage
+      ),
+      rawWinPercentage: player.overallWinPercentage
+    }));
+  }, [filteredPlayerStats, leagueAverage]);
+
+  // Categorize players
+  const categorizedPlayers = useMemo(() =>
+    categorizePlayersByStanding(playersWithAdjusted, minimumGames),
+    [playersWithAdjusted, minimumGames]
+  );
+
+  // Sort each category by adjusted win percentage
+  const sortedActive = useMemo(() =>
+    [...categorizedPlayers.active].sort((a, b) => b.adjustedWinPercentage - a.adjustedWinPercentage),
+    [categorizedPlayers.active]
+  );
+
+  const sortedNeedsMore = useMemo(() =>
+    [...categorizedPlayers.needsMoreGames].sort((a, b) => b.adjustedWinPercentage - a.adjustedWinPercentage),
+    [categorizedPlayers.needsMoreGames]
+  );
+
+  const sortedInactive = useMemo(() =>
+    [...categorizedPlayers.inactive].sort((a, b) => b.adjustedWinPercentage - a.adjustedWinPercentage),
+    [categorizedPlayers.inactive]
+  );
+
+  // Calculate ranks for active players (dense ranking)
+  const activeWithRanks = useMemo(() => {
     let currentRank = 1;
-    return sortedPlayers.map((player, index) => {
+    return sortedActive.map((player, index) => {
       if (index > 0) {
-        const prevPlayer = sortedPlayers[index - 1];
-        const isTied = sortBy === 'winPercentage'
-          ? player.overallWinPercentage === prevPlayer.overallWinPercentage
-          : player.totalGamesPlayed === prevPlayer.totalGamesPlayed;
-
+        const prevPlayer = sortedActive[index - 1];
+        const isTied = player.adjustedWinPercentage === prevPlayer.adjustedWinPercentage;
         if (!isTied) {
           currentRank++;
         }
       }
       return { ...player, rank: currentRank };
     });
-  }, [sortedPlayers, sortBy]);
+  }, [sortedActive]);
 
   const handleToggleInjured = () => {
     if (selectedPlayer && onUpdatePlayer) {
@@ -99,22 +145,46 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
     return 'All Time';
   };
 
-  const getSortByLabel = () => {
-    if (sortBy === 'winPercentage') return 'Win %';
-    if (sortBy === 'totalGames') return 'Total Games';
-    return 'Win %';
-  };
-
   return (
     <div className="mb-8">
+      {/* Header with Filters */}
       <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-6 mb-8">
-        <div className="flex items-center justify-between gap-8 flex-wrap">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
           {/* Heading */}
-          <h2 className="text-2xl font-bold text-slate-900">Player Standings</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-slate-900">Player Standings</h2>
+            <div className="group relative">
+              <svg className="w-5 h-5 text-slate-400 hover:text-slate-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="invisible group-hover:visible absolute left-0 top-full mt-2 w-80 bg-slate-900 text-white text-sm p-4 rounded-xl shadow-xl z-50">
+                <p className="font-bold mb-2">How Rankings Work:</p>
+                <p className="mb-2">
+                  <span className="font-semibold">Adjusted %:</span> Uses Bayesian averaging to prevent small sample sizes from dominating. Your win% is combined with {Math.round(leagueAverage * 100)}% league average × 15 phantom games.
+                </p>
+                <p className="mb-2">
+                  <span className="font-semibold">Minimum Games:</span> Players need {minimumGames}+ games to qualify for standings (calculated as 40% of league average).
+                </p>
+                <p>Toggle "Raw %" to see unadjusted win percentages.</p>
+              </div>
+            </div>
+          </div>
 
-          {/* Filter and Sort Dropdowns */}
+          {/* Filter Controls */}
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Filter By */}
+            {/* Adjusted vs Raw Toggle */}
+            <button
+              onClick={() => setShowAdjusted(!showAdjusted)}
+              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all border-2 ${
+                showAdjusted
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600'
+                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              {showAdjusted ? 'Adjusted %' : 'Raw %'}
+            </button>
+
+            {/* Time Filter */}
             <div className="flex items-center gap-2 relative">
               <span className="text-sm font-semibold text-slate-600 whitespace-nowrap">Filter by:</span>
               <button
@@ -155,50 +225,75 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
                 </div>
               )}
             </div>
-
-            {/* Sort By */}
-            <div className="flex items-center gap-2 relative">
-              <span className="text-sm font-semibold text-slate-600 whitespace-nowrap">Sort by:</span>
-              <button
-                onClick={() => setShowSortBy(!showSortBy)}
-                className="px-4 py-2 bg-slate-50 border-2 border-slate-200 text-slate-700 rounded-xl font-semibold text-sm hover:shadow-md transition-all flex items-center gap-2"
-              >
-                {getSortByLabel()}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {showSortBy && (
-                <div className="absolute top-full right-0 mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl z-10 min-w-[150px] overflow-hidden">
-                  <button
-                    onClick={() => { setSortBy('winPercentage'); setShowSortBy(false); }}
-                    className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${sortBy === 'winPercentage' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
-                  >
-                    Win %
-                  </button>
-                  <button
-                    onClick={() => { setSortBy('totalGames'); setShowSortBy(false); }}
-                    className={`w-full px-4 py-2 text-left font-semibold text-sm hover:bg-slate-50 transition-colors ${sortBy === 'totalGames' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'text-slate-700'}`}
-                  >
-                    Total Games
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {playersWithRanks.map((player) => (
-          <PlayerCard
-            key={player.name}
-            player={player}
-            rank={player.rank}
-            onClick={() => setSelectedPlayer(player)}
-          />
-        ))}
-      </div>
+      {/* Active Standings Section */}
+      {activeWithRanks.length > 0 && (
+        <>
+          <div className="flex items-center gap-3 mb-4">
+            <h3 className="text-xl font-bold text-slate-900">🏆 Active Standings</h3>
+            <span className="text-sm font-semibold text-slate-500">({activeWithRanks.length} players • {minimumGames}+ games)</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {activeWithRanks.map((player) => (
+              <PlayerCard
+                key={player.name}
+                player={player}
+                rank={player.rank}
+                showAdjusted={showAdjusted}
+                leagueAverage={leagueAverage}
+                onClick={() => setSelectedPlayer(player)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Needs More Games Section */}
+      {sortedNeedsMore.length > 0 && (
+        <>
+          <div className="flex items-center gap-3 mb-4">
+            <h3 className="text-xl font-bold text-slate-900">📊 Needs More Games</h3>
+            <span className="text-sm font-semibold text-slate-500">({sortedNeedsMore.length} players • {minimumGames - 1} games or fewer)</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {sortedNeedsMore.map((player) => (
+              <PlayerCard
+                key={player.name}
+                player={player}
+                rank={null}
+                showAdjusted={showAdjusted}
+                leagueAverage={leagueAverage}
+                onClick={() => setSelectedPlayer(player)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Inactive Players Section */}
+      {sortedInactive.length > 0 && (
+        <>
+          <div className="flex items-center gap-3 mb-4">
+            <h3 className="text-xl font-bold text-slate-900">💤 Inactive</h3>
+            <span className="text-sm font-semibold text-slate-500">({sortedInactive.length} players • Last played 30+ days ago)</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sortedInactive.map((player) => (
+              <PlayerCard
+                key={player.name}
+                player={player}
+                rank={null}
+                showAdjusted={showAdjusted}
+                leagueAverage={leagueAverage}
+                onClick={() => setSelectedPlayer(player)}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {selectedPlayer && (
         <PlayerModal

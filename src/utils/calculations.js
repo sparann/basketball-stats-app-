@@ -142,14 +142,88 @@ export const formatDate = (dateString) => {
 };
 
 /**
- * Check if player is active (played in last 14 days)
+ * Check if player is active (played in last 30 days)
  * @param {string} lastPlayedDate - Last played date
  * @returns {boolean} True if active
  */
 export const isPlayerActive = (lastPlayedDate) => {
   if (!lastPlayedDate) return false;
   const lastPlayed = new Date(lastPlayedDate);
-  const fourteenDaysAgo = new Date();
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  return lastPlayed >= fourteenDaysAgo;
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  return lastPlayed >= thirtyDaysAgo;
+};
+
+/**
+ * Calculate league-wide average win percentage
+ * @param {Array} players - Array of player objects
+ * @returns {number} League average win percentage (0-1)
+ */
+export const calculateLeagueAverage = (players) => {
+  if (players.length === 0) return 0.5; // Default to 50% if no data
+
+  const totalGames = players.reduce((sum, p) => sum + p.totalGamesPlayed, 0);
+  const totalWins = players.reduce((sum, p) => sum + p.totalGamesWon, 0);
+
+  if (totalGames === 0) return 0.5;
+  return totalWins / totalGames;
+};
+
+/**
+ * Calculate Bayesian adjusted win percentage
+ * @param {number} wins - Games won
+ * @param {number} games - Games played
+ * @param {number} leagueAverage - League average win% (0-1)
+ * @param {number} weight - Weight of phantom games (default 15)
+ * @returns {number} Adjusted win percentage (0-1)
+ */
+export const calculateAdjustedWinPercentage = (wins, games, leagueAverage, weight = 15) => {
+  if (games === 0) return leagueAverage;
+
+  const phantomWins = leagueAverage * weight;
+  const adjustedWins = wins + phantomWins;
+  const adjustedGames = games + weight;
+
+  return adjustedWins / adjustedGames;
+};
+
+/**
+ * Calculate dynamic minimum games threshold
+ * @param {Array} players - Array of player objects
+ * @returns {number} Minimum games required for standings
+ */
+export const calculateMinimumGamesThreshold = (players) => {
+  if (players.length === 0) return 5;
+
+  const averageGames = players.reduce((sum, p) => sum + p.totalGamesPlayed, 0) / players.length;
+
+  // 40% of average games, min 5, max 20
+  return Math.max(5, Math.min(20, Math.floor(averageGames * 0.4)));
+};
+
+/**
+ * Categorize players into standings groups
+ * @param {Array} players - Array of player objects
+ * @param {number} minimumGames - Minimum games threshold
+ * @returns {Object} Object with active, needsMoreGames, and inactive arrays
+ */
+export const categorizePlayersByStanding = (players, minimumGames) => {
+  const active = [];
+  const needsMoreGames = [];
+  const inactive = [];
+
+  players.forEach(player => {
+    const meetsThreshold = player.totalGamesPlayed >= minimumGames;
+    const isActive = isPlayerActive(player.lastPlayed);
+
+    if (!isActive) {
+      inactive.push(player);
+    } else if (meetsThreshold) {
+      active.push(player);
+    } else {
+      needsMoreGames.push(player);
+    }
+  });
+
+  return { active, needsMoreGames, inactive };
 };
