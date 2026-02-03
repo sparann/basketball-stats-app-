@@ -240,9 +240,19 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
       {/* Active Standings Section */}
       {activeWithRanks.length > 0 && (
         <>
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-2 mb-4">
             <h3 className="text-xl font-bold text-slate-900">🏆 Active Standings</h3>
-            <span className="text-sm font-semibold text-slate-500">({activeWithRanks.length} players • {minimumGames}+ games)</span>
+            <div className="group relative">
+              <svg className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="invisible group-hover:visible absolute left-0 top-full mt-2 w-72 bg-slate-900 text-white text-xs p-3 rounded-xl shadow-xl z-50">
+                <p className="font-bold mb-1">Active Standings</p>
+                <p className="text-slate-300">
+                  Players who have played at least {minimumGames} games and have been active within the last 14 days. Currently {activeWithRanks.length} {activeWithRanks.length === 1 ? 'player' : 'players'}.
+                </p>
+              </div>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {activeWithRanks.map((player) => (
@@ -260,9 +270,19 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
       {/* Needs More Games Section */}
       {sortedNeedsMore.length > 0 && (
         <>
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-2 mb-4">
             <h3 className="text-xl font-bold text-slate-900">📊 Needs More Games</h3>
-            <span className="text-sm font-semibold text-slate-500">({sortedNeedsMore.length} players • {minimumGames - 1} games or fewer)</span>
+            <div className="group relative">
+              <svg className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="invisible group-hover:visible absolute left-0 top-full mt-2 w-72 bg-slate-900 text-white text-xs p-3 rounded-xl shadow-xl z-50">
+                <p className="font-bold mb-1">Needs More Games</p>
+                <p className="text-slate-300">
+                  Players who are active but haven't reached the {minimumGames} game minimum to qualify for standings. Currently {sortedNeedsMore.length} {sortedNeedsMore.length === 1 ? 'player' : 'players'}.
+                </p>
+              </div>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {sortedNeedsMore.map((player) => (
@@ -280,9 +300,19 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
       {/* Inactive Players Section */}
       {sortedInactive.length > 0 && (
         <>
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-2 mb-4">
             <h3 className="text-xl font-bold text-slate-900">💤 Inactive</h3>
-            <span className="text-sm font-semibold text-slate-500">({sortedInactive.length} players • Last played 14+ days ago)</span>
+            <div className="group relative">
+              <svg className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="invisible group-hover:visible absolute left-0 top-full mt-2 w-72 bg-slate-900 text-white text-xs p-3 rounded-xl shadow-xl z-50">
+                <p className="font-bold mb-1">Inactive</p>
+                <p className="text-slate-300">
+                  Players who haven't played in 14+ days. Currently {sortedInactive.length} {sortedInactive.length === 1 ? 'player' : 'players'}.
+                </p>
+              </div>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedInactive.map((player) => (
