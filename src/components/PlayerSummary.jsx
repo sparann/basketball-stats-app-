@@ -153,7 +153,7 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
                   <span className="font-semibold">Minimum Games:</span> Players need {minimumGames}+ games to qualify for Active Standings. This threshold automatically adjusts as the group plays more (calculated as 40% of league average, min 5, max 20).
                 </p>
                 <p className="mb-2">
-                  <span className="font-semibold">Categories:</span> Active (qualified), Needs More Games (below threshold), Inactive (30+ days).
+                  <span className="font-semibold">Categories:</span> Active (qualified), Needs More Games (below threshold), Inactive (14+ days).
                 </p>
                 <p>Rankings are based on actual win percentages.</p>
               </div>
@@ -282,7 +282,7 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
         <>
           <div className="flex items-center gap-3 mb-4">
             <h3 className="text-xl font-bold text-slate-900">💤 Inactive</h3>
-            <span className="text-sm font-semibold text-slate-500">({sortedInactive.length} players • Last played 30+ days ago)</span>
+            <span className="text-sm font-semibold text-slate-500">({sortedInactive.length} players • Last played 14+ days ago)</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedInactive.map((player) => (

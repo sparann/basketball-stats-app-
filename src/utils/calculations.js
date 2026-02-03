@@ -142,16 +142,16 @@ export const formatDate = (dateString) => {
 };
 
 /**
- * Check if player is active (played in last 30 days)
+ * Check if player is active (played in last 14 days)
  * @param {string} lastPlayedDate - Last played date
  * @returns {boolean} True if active
  */
 export const isPlayerActive = (lastPlayedDate) => {
   if (!lastPlayedDate) return false;
   const lastPlayed = new Date(lastPlayedDate);
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  return lastPlayed >= thirtyDaysAgo;
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  return lastPlayed >= fourteenDaysAgo;
 };
 
 /**
