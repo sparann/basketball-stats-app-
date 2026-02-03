@@ -3,16 +3,14 @@ import PlayerCard from './PlayerCard';
 import PlayerModal from './PlayerModal';
 import {
   aggregatePlayerStats,
-  calculateLeagueAverage,
-  calculateAdjustedWinPercentage,
   calculateMinimumGamesThreshold,
-  categorizePlayersByStanding
+  categorizePlayersByStanding,
+  sortPlayers
 } from '../utils/calculations';
 
 const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [timeFilter, setTimeFilter] = useState('allTime');
-  const [showAdjusted, setShowAdjusted] = useState(false);
   const [showTimeFilter, setShowTimeFilter] = useState(false);
 
   // Filter sessions based on time period
@@ -51,49 +49,31 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
     });
   }, [filteredSessions, timeFilter, players]);
 
-  // Calculate league stats
-  const leagueAverage = useMemo(() =>
-    calculateLeagueAverage(filteredPlayerStats),
-    [filteredPlayerStats]
-  );
-
+  // Calculate minimum games threshold
   const minimumGames = useMemo(() =>
     calculateMinimumGamesThreshold(filteredPlayerStats),
     [filteredPlayerStats]
   );
 
-  // Add adjusted win percentage to all players
-  const playersWithAdjusted = useMemo(() => {
-    return filteredPlayerStats.map(player => ({
-      ...player,
-      adjustedWinPercentage: calculateAdjustedWinPercentage(
-        player.totalGamesWon,
-        player.totalGamesPlayed,
-        leagueAverage
-      ),
-      rawWinPercentage: player.overallWinPercentage
-    }));
-  }, [filteredPlayerStats, leagueAverage]);
-
   // Categorize players
   const categorizedPlayers = useMemo(() =>
-    categorizePlayersByStanding(playersWithAdjusted, minimumGames),
-    [playersWithAdjusted, minimumGames]
+    categorizePlayersByStanding(filteredPlayerStats, minimumGames),
+    [filteredPlayerStats, minimumGames]
   );
 
-  // Sort each category by adjusted win percentage
+  // Sort each category by win percentage
   const sortedActive = useMemo(() =>
-    [...categorizedPlayers.active].sort((a, b) => b.adjustedWinPercentage - a.adjustedWinPercentage),
+    sortPlayers(categorizedPlayers.active, 'winPercentage'),
     [categorizedPlayers.active]
   );
 
   const sortedNeedsMore = useMemo(() =>
-    [...categorizedPlayers.needsMoreGames].sort((a, b) => b.adjustedWinPercentage - a.adjustedWinPercentage),
+    sortPlayers(categorizedPlayers.needsMoreGames, 'winPercentage'),
     [categorizedPlayers.needsMoreGames]
   );
 
   const sortedInactive = useMemo(() =>
-    [...categorizedPlayers.inactive].sort((a, b) => b.adjustedWinPercentage - a.adjustedWinPercentage),
+    sortPlayers(categorizedPlayers.inactive, 'winPercentage'),
     [categorizedPlayers.inactive]
   );
 
@@ -103,7 +83,7 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
     return sortedActive.map((player, index) => {
       if (index > 0) {
         const prevPlayer = sortedActive[index - 1];
-        const isTied = player.adjustedWinPercentage === prevPlayer.adjustedWinPercentage;
+        const isTied = player.overallWinPercentage === prevPlayer.overallWinPercentage;
         if (!isTied) {
           currentRank++;
         }
@@ -160,29 +140,18 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
               <div className="invisible group-hover:visible absolute left-0 top-full mt-2 w-80 bg-slate-900 text-white text-sm p-4 rounded-xl shadow-xl z-50">
                 <p className="font-bold mb-2">How Rankings Work:</p>
                 <p className="mb-2">
-                  <span className="font-semibold">Adjusted %:</span> Uses Bayesian averaging to prevent small sample sizes from dominating. Your win% is combined with {Math.round(leagueAverage * 100)}% league average × 15 phantom games.
+                  <span className="font-semibold">Minimum Games:</span> Players need {minimumGames}+ games to qualify for Active Standings. This threshold automatically adjusts as the group plays more (calculated as 40% of league average, min 5, max 20).
                 </p>
                 <p className="mb-2">
-                  <span className="font-semibold">Minimum Games:</span> Players need {minimumGames}+ games to qualify for standings (calculated as 40% of league average).
+                  <span className="font-semibold">Categories:</span> Active (qualified), Needs More Games (below threshold), Inactive (30+ days).
                 </p>
-                <p>Toggle "Raw %" to see unadjusted win percentages.</p>
+                <p>Rankings are based on actual win percentages.</p>
               </div>
             </div>
           </div>
 
           {/* Filter Controls */}
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Adjusted vs Raw Toggle */}
-            <button
-              onClick={() => setShowAdjusted(!showAdjusted)}
-              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all border-2 ${
-                showAdjusted
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600'
-                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              {showAdjusted ? 'Adjusted %' : 'Raw %'}
-            </button>
 
             {/* Time Filter */}
             <div className="flex items-center gap-2 relative">
@@ -242,8 +211,6 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
                 key={player.name}
                 player={player}
                 rank={player.rank}
-                showAdjusted={showAdjusted}
-                leagueAverage={leagueAverage}
                 onClick={() => setSelectedPlayer(player)}
               />
             ))}
@@ -264,8 +231,6 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
                 key={player.name}
                 player={player}
                 rank={null}
-                showAdjusted={showAdjusted}
-                leagueAverage={leagueAverage}
                 onClick={() => setSelectedPlayer(player)}
               />
             ))}
@@ -286,8 +251,6 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
                 key={player.name}
                 player={player}
                 rank={null}
-                showAdjusted={showAdjusted}
-                leagueAverage={leagueAverage}
                 onClick={() => setSelectedPlayer(player)}
               />
             ))}
