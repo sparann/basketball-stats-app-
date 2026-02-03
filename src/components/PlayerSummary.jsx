@@ -12,7 +12,7 @@ import {
 const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [timeFilter, setTimeFilter] = useState('allTime');
-  const [showAdjusted, setShowAdjusted] = useState(true);
+  const [showAdjusted, setShowAdjusted] = useState(false);
   const [showTimeFilter, setShowTimeFilter] = useState(false);
 
   // Filter sessions based on time period
