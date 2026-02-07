@@ -31,13 +31,20 @@ const SessionLog = ({ sessions }) => {
   };
 
   const getGradientColor = (color) => {
-    if (color === 'perfect') return 'from-yellow-400 via-amber-500 to-yellow-400';
+    if (color === 'perfect') return 'from-[#00BFBF] to-[#008B8B]';
     if (color === 'excellent') return 'from-green-600 to-emerald-600';
     if (color === 'good') return 'from-yellow-500 to-amber-500';
     if (color === 'fair') return 'from-orange-500 to-orange-600';
     if (color === 'poor') return 'from-red-600 to-red-700';
     if (color === 'default') return 'from-slate-600 to-slate-600';
     return 'from-blue-600 to-indigo-600';
+  };
+
+  const getBgColor = (color) => {
+    if (color === 'perfect') return 'bg-gradient-to-r from-sky-200 via-cyan-50 to-sky-200';
+    if (color === 'excellent') return 'bg-slate-50';
+    if (color === 'good') return 'bg-slate-50';
+    return 'bg-slate-50';
   };
 
   return (

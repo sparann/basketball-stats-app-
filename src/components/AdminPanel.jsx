@@ -26,36 +26,36 @@ const AdminPanel = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
-        <div className="p-6 border-b border-slate-200">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-slate-900">Admin Panel</h2>
+    <div className="max-w-4xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-slate-200">
+          <div className="flex items-center justify-between mb-4 gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Admin Panel</h2>
             <button
               onClick={onLogout}
-              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors"
+              className="px-3 sm:px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors whitespace-nowrap"
             >
               Logout
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto">
             <button
               onClick={() => handleTabChange('sessions')}
-              className={`px-5 py-2.5 ${activeTab === 'sessions' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
+              className={`px-5 py-2.5 whitespace-nowrap ${activeTab === 'sessions' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
             >
               Sessions
             </button>
             <button
               onClick={() => handleTabChange('players')}
-              className={`px-5 py-2.5 ${activeTab === 'players' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
+              className={`px-5 py-2.5 whitespace-nowrap ${activeTab === 'players' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
             >
               Players
             </button>
             <button
               onClick={() => handleTabChange('locations')}
-              className={`px-5 py-2.5 ${activeTab === 'locations' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
+              className={`px-5 py-2.5 whitespace-nowrap ${activeTab === 'locations' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-700'} rounded-xl font-semibold text-sm hover:shadow-md transition-all`}
             >
               Locations
             </button>
@@ -63,7 +63,7 @@ const AdminPanel = ({
         </div>
 
         {activeTab === 'sessions' && (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <ManageSessions
               sessions={sessions}
               locations={locations}
@@ -75,7 +75,7 @@ const AdminPanel = ({
         )}
 
         {activeTab === 'players' && (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <ManagePlayers
               players={playerStats}
               onUpdatePlayer={onUpdatePlayer}
@@ -85,7 +85,7 @@ const AdminPanel = ({
         )}
 
         {activeTab === 'locations' && (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <ManageLocations
               locations={locations}
               onAddLocation={onAddLocation}

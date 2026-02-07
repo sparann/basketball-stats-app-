@@ -10,7 +10,7 @@ const PlayerCard = ({ player, rank, onClick }) => {
   const isActive = isPlayerActive(player.lastPlayed);
 
   const getGradientColor = (color) => {
-    if (color === 'perfect') return 'from-yellow-400 via-amber-500 to-yellow-400';
+    if (color === 'perfect') return 'from-cyan-100 via-white to-cyan-100';
     if (color === 'excellent') return 'from-green-600 to-emerald-600';
     if (color === 'good') return 'from-yellow-500 to-amber-500';
     if (color === 'fair') return 'from-orange-500 to-orange-600';
@@ -20,7 +20,7 @@ const PlayerCard = ({ player, rank, onClick }) => {
   };
 
   const getBadgeColor = (color) => {
-    if (color === 'perfect') return 'from-yellow-300 to-amber-500 shadow-lg shadow-yellow-300';
+    if (color === 'perfect') return 'from-sky-200 to-cyan-100 shadow-lg shadow-cyan-200';
     if (color === 'excellent') return 'from-green-400 to-emerald-600';
     if (color === 'good') return 'from-yellow-400 to-amber-600';
     if (color === 'fair') return 'from-orange-400 to-orange-600';
@@ -30,7 +30,7 @@ const PlayerCard = ({ player, rank, onClick }) => {
   };
 
   const getBarColor = (color) => {
-    if (color === 'perfect') return 'from-yellow-400 to-amber-500';
+    if (color === 'perfect') return 'from-sky-300 to-cyan-200';
     if (color === 'excellent') return 'from-green-600 to-emerald-500';
     if (color === 'good') return 'from-yellow-500 to-amber-500';
     if (color === 'fair') return 'from-orange-500 to-orange-600';
@@ -91,14 +91,14 @@ const PlayerCard = ({ player, rank, onClick }) => {
             </div>
           </div>
           {rank && (
-            <div className={`flex-shrink-0 w-10 h-10 bg-gradient-to-br ${getBadgeColor(winPercentageColor)} rounded-xl flex items-center justify-center text-white font-bold shadow-lg`}>
+            <div className={`flex-shrink-0 w-10 h-10 bg-gradient-to-br ${getBadgeColor(winPercentageColor)} rounded-xl flex items-center justify-center ${winPercentageColor === 'perfect' ? 'text-slate-900' : 'text-white'} font-bold shadow-lg`}>
               #{rank}
             </div>
           )}
         </div>
 
         <div className="mb-6">
-          <div className={`text-6xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent mb-2 ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]' : ''}`}>
+          <div className={`text-6xl font-extrabold ${winPercentageColor === 'perfect' ? 'text-slate-900' : `bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent`} mb-2`}>
             {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
           </div>
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Win Rate</p>
@@ -129,7 +129,7 @@ const PlayerCard = ({ player, rank, onClick }) => {
 
       <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-t border-slate-200">
         <div className="flex items-center gap-2 h-16">
-          {player.sessions.slice(-5).map((session, index) => {
+          {player.sessions.slice(-5).reverse().map((session, index) => {
             const sessionColor = getWinPercentageColor(session.winPercentage, session.gamesPlayed);
             return (
               <div

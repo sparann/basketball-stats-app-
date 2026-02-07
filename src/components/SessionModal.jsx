@@ -46,7 +46,7 @@ const SessionModal = ({ session, onClose }) => {
   });
 
   const getGradientColor = (color) => {
-    if (color === 'perfect') return 'from-yellow-400 via-amber-500 to-yellow-400';
+    if (color === 'perfect') return 'from-[#00BFBF] to-[#008B8B]';
     if (color === 'excellent') return 'from-green-600 to-emerald-600';
     if (color === 'good') return 'from-yellow-500 to-amber-500';
     if (color === 'fair') return 'from-orange-500 to-orange-600';
@@ -118,6 +118,7 @@ const SessionModal = ({ session, onClose }) => {
             {playersWithRanks.map((player) => {
               const playerColor = getWinPercentageColor(player.winPercentage, player.gamesPlayed);
               const isTopPerformer = topPerformers.some(tp => tp.name === player.name);
+              const isPerfect = playerColor === 'perfect';
 
               return (
                 <div
@@ -127,7 +128,7 @@ const SessionModal = ({ session, onClose }) => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getGradientColor(playerColor)} flex items-center justify-center text-white text-sm font-bold`}>
+                    <div className={`w-8 h-8 rounded-full ${isPerfect ? 'bg-gradient-to-br from-sky-200 to-cyan-100' : `bg-gradient-to-br ${getGradientColor(playerColor)}`} flex items-center justify-center ${isPerfect ? 'text-slate-900' : 'text-white'} text-sm font-bold`}>
                       #{player.rank}
                     </div>
                     <div>

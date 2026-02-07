@@ -4,6 +4,21 @@ A simple, clean React web app for tracking pickup basketball win percentages wit
 
 ## Features
 
+- **Live Session Mode** 🔥 NEW!
+  - Real-time game tracking courtside
+  - Quick entry (<1 minute between games)
+  - Smart team rotation logic
+  - Game-by-game data collection
+  - Mobile-optimized interface
+  - Offline support with auto-sync
+  - See [LIVE_SESSION_SETUP.md](LIVE_SESSION_SETUP.md) for details
+
+- **Admin Panel**: Secure management interface
+  - Add/edit/delete sessions and players
+  - Manage court locations
+  - Start live sessions
+  - View session history
+
 - **Player Summary Dashboard**: Card-based view showing overall stats for each player
   - Win percentage with color coding (green >70%, yellow 50-70%, red <50%)
   - Total games played and won
@@ -18,6 +33,7 @@ A simple, clean React web app for tracking pickup basketball win percentages wit
   - Show/hide notes
 
 - **Responsive Design**: Works perfectly on desktop, tablet, and mobile
+- **Database Storage**: Powered by Supabase for real-time data sync
 
 ## Live Demo
 
@@ -183,10 +199,11 @@ npm run deploy
 
 ## Tech Stack
 
-- **Framework**: Vite + React 18
+- **Framework**: Vite + React 19
 - **Language**: JavaScript
-- **Styling**: Plain CSS with CSS variables
-- **Data**: Static JSON file
+- **Styling**: Tailwind CSS
+- **Database**: Supabase (PostgreSQL)
+- **Real-time**: Supabase Realtime
 - **Hosting**: Vercel/Netlify/GitHub Pages
 
 ## Project Structure
@@ -212,12 +229,16 @@ basketball-stats-app/
 
 ## Future Enhancement Ideas
 
-- Add charts for win % trends over time
+- ✅ ~~Simple admin panel for in-browser editing~~ (Implemented)
+- ✅ ~~Live session tracking~~ (Implemented)
+- "Who Wins With Who" analytics dashboard
+- Player chemistry and team composition analysis
 - Head-to-head comparison between players
-- Session MVP badges
+- Session MVP badges based on win rate
 - Dark mode toggle
 - Export stats as images for social media
-- Simple admin panel for in-browser editing
+- Multi-device real-time sync
+- Spectator view for live sessions
 
 ## Questions or Issues?
 

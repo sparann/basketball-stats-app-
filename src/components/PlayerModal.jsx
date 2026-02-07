@@ -13,6 +13,9 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
   const [showMenu, setShowMenu] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sessionHistoryView, setSessionHistoryView] = useState('table');
+  const [insightsView, setInsightsView] = useState('teammates');
+  const [gamesData, setGamesData] = useState([]);
+  const [loadingGames, setLoadingGames] = useState(true);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -21,6 +24,52 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
       document.body.style.overflow = '';
     };
   }, []);
+
+  // Fetch games data for teammate analysis
+  useEffect(() => {
+    const fetchGames = async () => {
+      if (!isSupabaseConfigured() || !player.sessions || player.sessions.length === 0) {
+        setLoadingGames(false);
+        return;
+      }
+
+      try {
+        // Get all session dates for this player
+        const sessionDates = player.sessions.map(s => s.date);
+
+        // Fetch games from live_sessions that match these dates
+        const { data: liveSessions, error: liveError } = await supabase
+          .from('live_sessions')
+          .select('id, date')
+          .in('date', sessionDates)
+          .eq('status', 'completed');
+
+        if (liveError) throw liveError;
+
+        if (!liveSessions || liveSessions.length === 0) {
+          setLoadingGames(false);
+          return;
+        }
+
+        // Fetch all games for these live sessions
+        const liveSessionIds = liveSessions.map(ls => ls.id);
+        const { data: games, error: gamesError } = await supabase
+          .from('games')
+          .select('*')
+          .in('live_session_id', liveSessionIds);
+
+        if (gamesError) throw gamesError;
+
+        setGamesData(games || []);
+      } catch (error) {
+        console.error('Error fetching games data:', error);
+      } finally {
+        setLoadingGames(false);
+      }
+    };
+
+    fetchGames();
+  }, [player.name, player.sessions]);
 
   const winPercentageColor = getWinPercentageColor(player.overallWinPercentage, player.totalGamesPlayed);
 
@@ -60,6 +109,74 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
   };
 
   const bestLocation = getBestLocation();
+
+  // Calculate best teammates (requires 5+ games together)
+  const getBestTeammates = () => {
+    if (!gamesData || gamesData.length === 0) return [];
+
+    const teammateStats = {};
+
+    gamesData.forEach(game => {
+      let playerTeam = null;
+      let teammates = [];
+
+      // Check which team the player was on
+      if (game.team_a_players && game.team_a_players.includes(player.name)) {
+        playerTeam = 'team_a';
+        teammates = game.team_a_players.filter(p => p !== player.name);
+      } else if (game.team_b_players && game.team_b_players.includes(player.name)) {
+        playerTeam = 'team_b';
+        teammates = game.team_b_players.filter(p => p !== player.name);
+      }
+
+      // If player wasn't on a team (sitting out), skip this game
+      if (!playerTeam) return;
+
+      // Track stats with each teammate
+      teammates.forEach(teammate => {
+        if (!teammateStats[teammate]) {
+          teammateStats[teammate] = { gamesPlayed: 0, gamesWon: 0 };
+        }
+
+        teammateStats[teammate].gamesPlayed++;
+
+        // If this team won, increment wins
+        if (game.winning_team === playerTeam) {
+          teammateStats[teammate].gamesWon++;
+        }
+      });
+    });
+
+    // Filter teammates with at least 5 games together
+    const qualifiedTeammates = Object.entries(teammateStats)
+      .filter(([_, stats]) => stats.gamesPlayed >= 5)
+      .map(([name, stats]) => ({
+        name,
+        gamesPlayed: stats.gamesPlayed,
+        gamesWon: stats.gamesWon,
+        winRate: stats.gamesWon / stats.gamesPlayed
+      }))
+      .sort((a, b) => {
+        // Sort by win rate first
+        if (b.winRate !== a.winRate) {
+          return b.winRate - a.winRate;
+        }
+        // If win rates are equal, sort by games played
+        return b.gamesPlayed - a.gamesPlayed;
+      })
+      .slice(0, 2); // Take top 2
+
+    return qualifiedTeammates;
+  };
+
+  const bestTeammates = getBestTeammates();
+
+  // Auto-switch to location view if no teammate data
+  useEffect(() => {
+    if (!loadingGames && bestTeammates.length === 0) {
+      setInsightsView('location');
+    }
+  }, [loadingGames, bestTeammates.length]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -119,7 +236,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
   };
 
   const getGradientColor = (color) => {
-    if (color === 'perfect') return 'from-yellow-400 via-amber-500 to-yellow-400';
+    if (color === 'perfect') return 'from-[#00BFBF] to-[#008B8B]';
     if (color === 'excellent') return 'from-green-600 to-emerald-600';
     if (color === 'good') return 'from-yellow-500 to-amber-500';
     if (color === 'fair') return 'from-orange-500 to-orange-600';
@@ -177,7 +294,7 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="text-xl sm:text-3xl font-bold text-slate-900 mb-1 sm:mb-2 truncate">{player.name}</h2>
-                <div className={`text-3xl sm:text-5xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent ${winPercentageColor === 'perfect' ? 'drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]' : ''}`}>
+                <div className={`text-3xl sm:text-5xl font-extrabold bg-gradient-to-r ${getGradientColor(winPercentageColor)} bg-clip-text text-transparent`}>
                   {formatWinPercentage(player.overallWinPercentage, player.totalGamesPlayed)}
                 </div>
                 <p className="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wide">Overall Win Rate</p>
@@ -275,12 +392,13 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
               {player.sessions.slice().reverse().map((session, index) => {
                 const sessionColor = getWinPercentageColor(session.winPercentage, session.gamesPlayed);
                 const sessionGradient = getGradientColor(sessionColor);
+                const isPerfect = sessionColor === 'perfect';
 
                 return (
                   <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                     <div className="flex items-center gap-3">
-                      <div className={`w-16 h-16 bg-gradient-to-br ${sessionGradient} rounded-xl flex items-center justify-center`}>
-                        <span className="text-white font-bold text-sm">{formatWinPercentage(session.winPercentage, session.gamesPlayed)}</span>
+                      <div className={`w-16 h-16 ${isPerfect ? 'bg-gradient-to-br from-sky-200 via-cyan-50 to-sky-200' : `bg-gradient-to-br ${sessionGradient}`} rounded-xl flex items-center justify-center`}>
+                        <span className={`${isPerfect ? 'text-slate-900' : 'text-white'} font-bold text-sm`}>{formatWinPercentage(session.winPercentage, session.gamesPlayed)}</span>
                       </div>
                       <div>
                         <p className="font-semibold text-slate-900">{formatDate(session.date)}</p>
@@ -363,24 +481,76 @@ const PlayerModal = ({ player, onClose, onToggleInjured, onUpdatePicture, sessio
           )}
         </div>
 
-        {/* Best Location */}
+        {/* Player Insights */}
         <div className="p-6">
-          <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4">Best Location</h3>
-          {bestLocation ? (
-            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-slate-50 to-blue-50 border-2 border-blue-100 rounded-xl">
-              <svg className="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <div className="flex-1">
-                <p className="font-bold text-slate-900">{bestLocation.name}</p>
-                <p className="text-sm text-slate-600">
-                  {formatWinPercentage(bestLocation.winRate, bestLocation.gamesPlayed)} win rate • {bestLocation.gamesWon}/{bestLocation.gamesPlayed} games
-                </p>
-              </div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Player Insights</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setInsightsView('teammates')}
+                className={`px-3 py-1 ${insightsView === 'teammates' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-600'} rounded-lg font-semibold text-xs hover:shadow-md transition-all`}
+              >
+                Teammates
+              </button>
+              <button
+                onClick={() => setInsightsView('location')}
+                className={`px-3 py-1 ${insightsView === 'location' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 'bg-slate-100 text-slate-600'} rounded-lg font-semibold text-xs hover:shadow-md transition-all`}
+              >
+                Location
+              </button>
             </div>
+          </div>
+
+          {insightsView === 'teammates' ? (
+            // Best Teammates View
+            loadingGames ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent"></div>
+              </div>
+            ) : bestTeammates.length > 0 ? (
+              <div className="space-y-3">
+                {bestTeammates.map((teammate, index) => (
+                  <div
+                    key={teammate.name}
+                    className="flex items-center gap-3 p-4 bg-gradient-to-r from-slate-50 to-green-50 border-2 border-green-100 rounded-xl"
+                  >
+                    <div className={`w-8 h-8 rounded-full ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500' : 'bg-gradient-to-br from-slate-400 to-slate-500'} flex items-center justify-center text-white text-sm font-bold`}>
+                      #{index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-900">{teammate.name}</p>
+                      <p className="text-sm text-slate-600">
+                        {formatWinPercentage(teammate.winRate, teammate.gamesPlayed)} win rate together • {teammate.gamesWon}/{teammate.gamesPlayed} games
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-500 text-sm">
+                {gamesData.length === 0
+                  ? 'No live session games recorded yet'
+                  : 'Not enough games with teammates yet (requires 5+ games together)'}
+              </p>
+            )
           ) : (
-            <p className="text-slate-500 text-sm">No location data available (requires 5+ games at a location)</p>
+            // Best Location View
+            bestLocation ? (
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-slate-50 to-blue-50 border-2 border-blue-100 rounded-xl">
+                <svg className="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="font-bold text-slate-900">{bestLocation.name}</p>
+                  <p className="text-sm text-slate-600">
+                    {formatWinPercentage(bestLocation.winRate, bestLocation.gamesPlayed)} win rate • {bestLocation.gamesWon}/{bestLocation.gamesPlayed} games
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-slate-500 text-sm">No location data available (requires 5+ games at a location)</p>
+            )
           )}
         </div>
       </div>

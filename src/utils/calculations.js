@@ -127,13 +127,19 @@ export const sortPlayers = (players, sortBy) => {
 };
 
 /**
- * Format date string
+ * Format date string (timezone-safe)
  * @param {string} dateString - Date in YYYY-MM-DD format
  * @returns {string} Formatted date or N/A
  */
 export const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
-  const date = new Date(dateString);
+
+  // Parse date components manually to avoid timezone conversion issues
+  const [year, month, day] = dateString.split('-').map(Number);
+
+  // Create date in local timezone (month is 0-indexed)
+  const date = new Date(year, month - 1, day);
+
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
