@@ -5,6 +5,7 @@ import WinnerButtons from './WinnerButtons';
 import InitialTeamSetupWizard from './InitialTeamSetupWizard';
 import PostGameFlow from './PostGameFlow';
 import EndSessionModal from './EndSessionModal';
+import AddPlayerModal from './AddPlayerModal';
 import { formatDateString } from '../../utils/dateFormatter';
 
 const LiveSessionInterface = ({ onExit }) => {
@@ -18,6 +19,7 @@ const LiveSessionInterface = ({ onExit }) => {
   const [showAllGames, setShowAllGames] = useState(false);
   const [gameState, setGameState] = useState('playing'); // 'playing', 'between_games', 'setup'
   const [lastGameResult, setLastGameResult] = useState(null);
+  const [showAddPlayerModal, setShowAddPlayerModal] = useState(false);
 
   // Request wake lock to keep screen on
   useEffect(() => {
@@ -174,6 +176,13 @@ const LiveSessionInterface = ({ onExit }) => {
             </div>
 
             <div className="flex gap-2">
+              <button
+                onClick={() => setShowAddPlayerModal(true)}
+                className="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-700 rounded-lg font-bold text-lg hover:bg-blue-200 transition-colors"
+                title="Add new player"
+              >
+                +
+              </button>
               {games.length > 0 && (
                 <button
                   onClick={handleUndoLastGame}
@@ -485,6 +494,12 @@ const LiveSessionInterface = ({ onExit }) => {
         <EndSessionModal
           onClose={() => setShowEndModal(false)}
           onConfirm={handleEndSession}
+        />
+      )}
+
+      {showAddPlayerModal && (
+        <AddPlayerModal
+          onClose={() => setShowAddPlayerModal(false)}
         />
       )}
 

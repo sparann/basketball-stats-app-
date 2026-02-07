@@ -458,6 +458,36 @@ export const LiveSessionProvider = ({ children }) => {
     }
   }, [session]);
 
+  // Add a new player during an active session
+  const addPlayer = useCallback(async (playerName) => {
+    if (!session) return;
+
+    try {
+      // Add player to database
+      const { error: insertError } = await supabase
+        .from('live_session_players')
+        .insert({
+          live_session_id: session.id,
+          player_name: playerName,
+          total_games_played: 0,
+          total_games_won: 0
+        });
+
+      if (insertError) throw insertError;
+
+      // Add player to local state (on the bench)
+      setPlayers(prev => ({
+        ...prev,
+        sittingOut: [...prev.sittingOut, { name: playerName, gamesPlayed: 0, gamesWon: 0 }]
+      }));
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error adding player:', error);
+      throw error;
+    }
+  }, [session]);
+
   const value = {
     session,
     games,
@@ -473,7 +503,8 @@ export const LiveSessionProvider = ({ children }) => {
       markWinner,
       undoLastGame,
       endSession,
-      abandonSession
+      abandonSession,
+      addPlayer
     }
   };
 
