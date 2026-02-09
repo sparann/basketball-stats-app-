@@ -5,6 +5,7 @@ export { default as LiveSessionWrapper } from './LiveSessionWrapper';
 export { default as StartLiveSessionModal } from './StartLiveSessionModal';
 export { default as InitialTeamSetupWizard } from './InitialTeamSetupWizard';
 export { default as PostGameFlow } from './PostGameFlow';
+export { default as ManageTeamsFlow } from './ManageTeamsFlow';
 export { default as EndSessionModal } from './EndSessionModal';
 export { default as AddPlayerModal } from './AddPlayerModal';
 export { default as TeamColumn } from './TeamColumn';

@@ -3,7 +3,7 @@ import { useLiveSession } from './LiveSessionContext';
 import TeamColumn from './TeamColumn';
 import WinnerButtons from './WinnerButtons';
 import InitialTeamSetupWizard from './InitialTeamSetupWizard';
-import PostGameFlow from './PostGameFlow';
+import ManageTeamsFlow from './ManageTeamsFlow';
 import EndSessionModal from './EndSessionModal';
 import AddPlayerModal from './AddPlayerModal';
 import { formatDateString } from '../../utils/dateFormatter';
@@ -479,14 +479,10 @@ const LiveSessionInterface = ({ onExit }) => {
         <InitialTeamSetupWizard onComplete={handleInitialSetupComplete} />
       )}
 
-      {showPostGameFlow && lastWinner && (
-        <PostGameFlow
-          winningTeam={lastWinner.winningTeam}
-          losingTeam={lastWinner.losingTeam}
+      {showPostGameFlow && (
+        <ManageTeamsFlow
           onComplete={handlePostGameComplete}
           onCancel={handleCancelPostGameFlow}
-          onNoMoreGames={handleNoMoreGames}
-          onReshootTeams={handleReshootTeams}
         />
       )}
 
