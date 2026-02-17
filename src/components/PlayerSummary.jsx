@@ -150,7 +150,7 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
               <div className="invisible group-hover:visible absolute left-0 top-full mt-2 w-80 bg-slate-900 text-white text-sm p-4 rounded-xl shadow-xl z-50">
                 <p className="font-bold mb-2">How Rankings Work:</p>
                 <p className="mb-2">
-                  <span className="font-semibold">Minimum Games:</span> Players need {minimumGames}+ games to qualify for Active Standings. This threshold automatically adjusts as the group plays more (calculated as 40% of league average, min 5, max 20).
+                  <span className="font-semibold">Minimum Requirements:</span> Players need {minimumGames}+ games AND 2+ sessions to qualify for Active Standings. Games threshold automatically adjusts as the group plays more (calculated as 40% of league average, min 5, max 20).
                 </p>
                 <p className="mb-2">
                   <span className="font-semibold">Categories:</span> Active (qualified), Needs More Games (below threshold), Inactive (14+ days).
@@ -249,7 +249,7 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
               <div className="invisible group-hover:visible absolute left-0 top-full mt-2 w-72 bg-slate-900 text-white text-xs p-3 rounded-xl shadow-xl z-50">
                 <p className="font-bold mb-1">Active Standings</p>
                 <p className="text-slate-300">
-                  Players who have played at least {minimumGames} games and have been active within the last 14 days. Currently {activeWithRanks.length} {activeWithRanks.length === 1 ? 'player' : 'players'}.
+                  Players who have played at least {minimumGames} games, attended 2+ sessions, and have been active within the last 14 days. Currently {activeWithRanks.length} {activeWithRanks.length === 1 ? 'player' : 'players'}.
                 </p>
               </div>
             </div>
@@ -279,7 +279,7 @@ const PlayerSummary = ({ players, onUpdatePlayer, sessions }) => {
               <div className="invisible group-hover:visible absolute left-0 top-full mt-2 w-72 bg-slate-900 text-white text-xs p-3 rounded-xl shadow-xl z-50">
                 <p className="font-bold mb-1">Needs More Games</p>
                 <p className="text-slate-300">
-                  Players who are active but haven't reached the {minimumGames} game minimum to qualify for standings. Currently {sortedNeedsMore.length} {sortedNeedsMore.length === 1 ? 'player' : 'players'}.
+                  Players who are active but haven't reached the {minimumGames} game minimum OR 2 session minimum to qualify for standings. Currently {sortedNeedsMore.length} {sortedNeedsMore.length === 1 ? 'player' : 'players'}.
                 </p>
               </div>
             </div>

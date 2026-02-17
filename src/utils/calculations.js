@@ -181,17 +181,20 @@ export const calculateMinimumGamesThreshold = (players) => {
  * @returns {Object} Object with active, needsMoreGames, and inactive arrays
  */
 export const categorizePlayersByStanding = (players, minimumGames) => {
+  const MINIMUM_SESSIONS = 2; // Require at least 2 sessions to avoid one-offs
+
   const active = [];
   const needsMoreGames = [];
   const inactive = [];
 
   players.forEach(player => {
-    const meetsThreshold = player.totalGamesPlayed >= minimumGames;
+    const meetsGamesThreshold = player.totalGamesPlayed >= minimumGames;
+    const meetsSessionsThreshold = player.sessionsAttended >= MINIMUM_SESSIONS;
     const isActive = isPlayerActive(player.lastPlayed);
 
     if (!isActive) {
       inactive.push(player);
-    } else if (meetsThreshold) {
+    } else if (meetsGamesThreshold && meetsSessionsThreshold) {
       active.push(player);
     } else {
       needsMoreGames.push(player);
