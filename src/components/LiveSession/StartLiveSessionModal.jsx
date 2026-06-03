@@ -51,7 +51,15 @@ const StartLiveSessionModal = ({ locations, playerStats, onClose, onSessionStart
 
     try {
       const playerNames = Array.from(selectedPlayers);
-      const newSession = await actions.startSession(sessionDate, sessionLocation, playerNames);
+      // Build player objects with pictureUrl from playerStats
+      const playerObjects = playerNames.map(name => {
+        const playerData = playerStats.find(p => p.name === name);
+        return {
+          name,
+          pictureUrl: playerData?.pictureUrl || null
+        };
+      });
+      const newSession = await actions.startSession(sessionDate, sessionLocation, playerObjects);
 
       if (onSessionStarted) {
         onSessionStarted(newSession);

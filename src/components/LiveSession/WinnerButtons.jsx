@@ -64,7 +64,6 @@ const WinnerButtons = ({ onWinnerSelected, disabled, teamASize, teamBSize }) => 
           </span>
         ) : (
           <>
-            <div className="text-2xl mb-1">🏀</div>
             TEAM A WON
           </>
         )}
@@ -91,7 +90,6 @@ const WinnerButtons = ({ onWinnerSelected, disabled, teamASize, teamBSize }) => 
           </span>
         ) : (
           <>
-            <div className="text-2xl mb-1">🏀</div>
             TEAM B WON
           </>
         )}

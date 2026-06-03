@@ -1,14 +1,36 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLiveSession } from './LiveSessionContext';
 
 const InitialTeamSetupWizard = ({ onComplete }) => {
-  const { players, actions, gameNumber } = useLiveSession();
+  const { players, actions, gameNumber, allSessionPlayers } = useLiveSession();
   const [step, setStep] = useState(1);
   const [teamASelection, setTeamASelection] = useState(new Set());
   const [teamBSelection, setTeamBSelection] = useState(new Set());
 
   const allPlayers = [...players.teamA, ...players.teamB, ...players.sittingOut];
   const availableForTeamB = allPlayers.filter(p => !teamASelection.has(p.name));
+
+  // Helper: Get display name (first name + last initial if duplicate)
+  const getDisplayName = useMemo(() => {
+    return (fullName, allPlayers) => {
+      const parts = fullName.trim().split(' ');
+      const firstName = parts[0];
+      const lastName = parts.length > 1 ? parts[parts.length - 1] : '';
+
+      // Check for duplicates with same first name
+      const duplicates = allPlayers.filter(p => {
+        const pFirstName = p.name.trim().split(' ')[0];
+        return pFirstName.toLowerCase() === firstName.toLowerCase();
+      });
+
+      if (duplicates.length > 1 && lastName) {
+        return `${firstName} ${lastName.charAt(0)}.`;
+      }
+
+      return firstName;
+    };
+  }, []);
+
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -87,44 +109,24 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
             <h2 className="text-2xl font-bold text-white">
               {step === 1 ? `Game ${gameNumber}: Select Team A` : `Game ${gameNumber}: Select Team B`}
             </h2>
-            <p className="text-white text-sm mt-1 opacity-90">
+            <p className="text-white text-sm mt-1 opacity-75">
               {step === 1
-                ? 'Choose players for Team A'
-                : `Choose ${teamASelection.size} players for Team B to match Team A`
+                ? `${teamASelection.size} ${teamASelection.size === 1 ? 'player' : 'players'} selected`
+                : `${teamBSelection.size} of ${teamASelection.size} selected`
               }
             </p>
           </div>
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Progress indicator */}
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-              step === 1 ? 'bg-blue-600 text-white' : 'bg-green-600 text-white'
-            }`}>
-              A
-            </div>
-            <div className="w-12 h-1 bg-slate-200"></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-              step === 2 ? 'bg-red-600 text-white' : 'bg-slate-200 text-slate-500'
-            }`}>
-              B
-            </div>
-          </div>
-
           {/* Team A Selection */}
           {step === 1 && (
             <>
-              <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-xl text-center">
-                <p className="text-blue-800 font-semibold">
-                  {teamASelection.size} {teamASelection.size === 1 ? 'player' : 'players'} selected
-                </p>
-              </div>
-
               <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
                 {allPlayers.map((player) => {
                   const isSelected = teamASelection.has(player.name);
                   const isDisabled = !isSelected && teamASelection.size >= 5;
+                  const fullPlayerData = allSessionPlayers?.find(p => p.name === player.name) || player;
                   return (
                     <button
                       key={player.name}
@@ -140,7 +142,12 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
                       }`}
                     >
                     <div className="flex items-center justify-between w-full">
-                      <p className="font-bold">{player.name}</p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-slate-600 text-white flex items-center justify-center font-bold text-xs">
+                          {player.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <p className="font-bold">{getDisplayName(player.name, allSessionPlayers)}</p>
+                      </div>
                       {teamASelection.has(player.name) && (
                         <span className="text-xl">✓</span>
                       )}
@@ -163,29 +170,11 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
           {/* Team B Selection */}
           {step === 2 && (
             <>
-              <div className="mb-4 p-3 bg-slate-50 border-2 border-slate-200 rounded-xl">
-                <div className="grid grid-cols-2 gap-2 text-center text-sm">
-                  <div>
-                    <p className="text-slate-500 font-semibold">Team A</p>
-                    <p className="text-blue-600 font-bold text-lg">{teamASelection.size}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 font-semibold">Team B</p>
-                    <p className={`font-bold text-lg ${
-                      teamBSelection.size === teamASelection.size
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                    }`}>
-                      {teamBSelection.size}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
                 {availableForTeamB.map((player) => {
                   const isSelected = teamBSelection.has(player.name);
                   const isDisabled = !isSelected && teamBSelection.size >= 5;
+                  const fullPlayerData = allSessionPlayers?.find(p => p.name === player.name) || player;
                   return (
                     <button
                       key={player.name}
@@ -201,7 +190,12 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
                       }`}
                     >
                     <div className="flex items-center justify-between w-full">
-                      <p className="font-bold">{player.name}</p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-slate-600 text-white flex items-center justify-center font-bold text-xs">
+                          {player.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <p className="font-bold">{getDisplayName(player.name, allSessionPlayers)}</p>
+                      </div>
                       {teamBSelection.has(player.name) && (
                         <span className="text-xl">✓</span>
                       )}
@@ -223,10 +217,7 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
                   disabled={teamBSelection.size !== teamASelection.size}
                   className="flex-1 px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {teamBSelection.size === teamASelection.size
-                    ? `Start Game! (${teamASelection.size}v${teamBSelection.size})`
-                    : `Need ${teamASelection.size} players for Team B`
-                  }
+                  Start Game
                 </button>
               </div>
             </>

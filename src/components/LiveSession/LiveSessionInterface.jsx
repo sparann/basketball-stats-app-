@@ -3,7 +3,7 @@ import { useLiveSession } from './LiveSessionContext';
 import TeamColumn from './TeamColumn';
 import WinnerButtons from './WinnerButtons';
 import InitialTeamSetupWizard from './InitialTeamSetupWizard';
-import ManageTeamsFlow from './ManageTeamsFlow';
+import SimpleRotationFlow from './SimpleRotationFlow';
 import EndSessionModal from './EndSessionModal';
 import AddPlayerModal from './AddPlayerModal';
 import { formatDateString } from '../../utils/dateFormatter';
@@ -64,6 +64,7 @@ const LiveSessionInterface = ({ onExit }) => {
       setLastGameResult({
         gameNumber: gameNumber,
         winningTeam: winningTeam,
+        losingTeam: winningTeam === 'team_a' ? 'team_b' : 'team_a',
         timestamp: new Date()
       });
       setGameState('between_games');
@@ -223,14 +224,14 @@ const LiveSessionInterface = ({ onExit }) => {
                           disabled={isLoading}
                           className="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-lg hover:shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-40"
                         >
-                          🏀 TEAM A WON
+                          TEAM A WON
                         </button>
                         <button
                           onClick={() => handleWinnerSelected('team_b')}
                           disabled={isLoading}
                           className="px-6 py-4 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl font-bold text-lg hover:shadow-lg hover:from-red-700 hover:to-rose-700 transition-all disabled:opacity-40"
                         >
-                          🏀 TEAM B WON
+                          TEAM B WON
                         </button>
                       </div>
                     </>
@@ -479,8 +480,10 @@ const LiveSessionInterface = ({ onExit }) => {
         <InitialTeamSetupWizard onComplete={handleInitialSetupComplete} />
       )}
 
-      {showPostGameFlow && (
-        <ManageTeamsFlow
+      {showPostGameFlow && lastGameResult && (
+        <SimpleRotationFlow
+          winningTeam={lastGameResult.winningTeam}
+          losingTeam={lastGameResult.losingTeam}
           onComplete={handlePostGameComplete}
           onCancel={handleCancelPostGameFlow}
         />

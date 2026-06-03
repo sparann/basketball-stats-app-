@@ -19,6 +19,7 @@ export const LiveSessionProvider = ({ children }) => {
     teamB: [],
     sittingOut: []
   });
+  const [allSessionPlayers, setAllSessionPlayers] = useState([]); // Master list - source of truth
   const [gameNumber, setGameNumber] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -44,12 +45,13 @@ export const LiveSessionProvider = ({ children }) => {
         session,
         games,
         players,
+        allSessionPlayers,
         gameNumber,
         timestamp: Date.now()
       };
       localStorage.setItem('liveSessionBackup', JSON.stringify(backup));
     }
-  }, [session, games, players, gameNumber]);
+  }, [session, games, players, allSessionPlayers, gameNumber]);
 
   // Initialize new session
   const startSession = useCallback(async (date, location, selectedPlayers) => {
@@ -72,13 +74,16 @@ export const LiveSessionProvider = ({ children }) => {
 
       if (sessionError) throw sessionError;
 
-      // Insert all players
-      const playerInserts = selectedPlayers.map(playerName => ({
-        live_session_id: newSession.id,
-        player_name: playerName,
-        total_games_played: 0,
-        total_games_won: 0
-      }));
+      // selectedPlayers can be either strings (old format) or objects with {name, pictureUrl}
+      const playerInserts = selectedPlayers.map(player => {
+        const playerName = typeof player === 'string' ? player : player.name;
+        return {
+          live_session_id: newSession.id,
+          player_name: playerName,
+          total_games_played: 0,
+          total_games_won: 0
+        };
+      });
 
       const { error: playersError } = await supabase
         .from('live_session_players')
@@ -86,14 +91,26 @@ export const LiveSessionProvider = ({ children }) => {
 
       if (playersError) throw playersError;
 
-      // Initialize player objects with stats
-      const playerObjects = selectedPlayers.map(name => ({
-        name,
-        gamesPlayed: 0,
-        gamesWon: 0
-      }));
+      // Initialize player objects with stats and pictureUrl
+      const playerObjects = selectedPlayers.map(player => {
+        if (typeof player === 'string') {
+          return {
+            name: player,
+            gamesPlayed: 0,
+            gamesWon: 0,
+            pictureUrl: null
+          };
+        }
+        return {
+          name: player.name,
+          gamesPlayed: 0,
+          gamesWon: 0,
+          pictureUrl: player.pictureUrl || null
+        };
+      });
 
       setSession(newSession);
+      setAllSessionPlayers(playerObjects); // Set master list
       setPlayers({
         teamA: [],
         teamB: [],
@@ -152,6 +169,7 @@ export const LiveSessionProvider = ({ children }) => {
       }));
 
       setSession(sessionData);
+      setAllSessionPlayers(playerObjects); // Set master list
       setGames(gamesData);
       setGameNumber(gamesData.length + 1);
 
@@ -185,13 +203,98 @@ export const LiveSessionProvider = ({ children }) => {
     }
   }, []);
 
-  // Update team rosters
+  // Helper: Reconstruct player object from name using master list
+  const getPlayerByName = useCallback((name) => {
+    const player = allSessionPlayers.find(p => p.name === name);
+    if (!player) {
+      console.error(`⚠️ Player "${name}" not found in session player list`);
+      return null;
+    }
+    return player;
+  }, [allSessionPlayers]);
+
+  // Helper: Validate roster update before applying
+  const validateRosterUpdate = useCallback((updates) => {
+    const allNames = [
+      ...(updates.teamA || []).map(p => typeof p === 'string' ? p : p.name),
+      ...(updates.teamB || []).map(p => typeof p === 'string' ? p : p.name),
+      ...(updates.sittingOut || []).map(p => typeof p === 'string' ? p : p.name)
+    ];
+
+    // Check for duplicates
+    const nameSet = new Set(allNames);
+    if (nameSet.size !== allNames.length) {
+      console.error('⚠️ Duplicate players detected in roster update');
+      return false;
+    }
+
+    // Check all names exist in master list
+    for (const name of allNames) {
+      if (!allSessionPlayers.find(p => p.name === name)) {
+        console.error(`⚠️ Player "${name}" not in session`);
+        return false;
+      }
+    }
+
+    // Check all session players are accounted for
+    if (nameSet.size !== allSessionPlayers.length) {
+      console.warn(`⚠️ Roster update missing players. Expected ${allSessionPlayers.length}, got ${nameSet.size}`);
+      const missingPlayers = allSessionPlayers.filter(p => !nameSet.has(p.name));
+      console.warn('Missing players:', missingPlayers.map(p => p.name));
+      return false;
+    }
+
+    return true;
+  }, [allSessionPlayers]);
+
+  // Update team rosters (with validation)
   const updateRoster = useCallback((updates) => {
+    // Convert player names to full player objects from master list
+    const normalizedUpdates = {};
+
+    if (updates.teamA) {
+      normalizedUpdates.teamA = updates.teamA.map(p => {
+        if (typeof p === 'string') {
+          return getPlayerByName(p);
+        }
+        // If it's already an object, verify it's current
+        const current = getPlayerByName(p.name);
+        return current || p;
+      }).filter(Boolean); // Remove nulls
+    }
+
+    if (updates.teamB) {
+      normalizedUpdates.teamB = updates.teamB.map(p => {
+        if (typeof p === 'string') {
+          return getPlayerByName(p);
+        }
+        const current = getPlayerByName(p.name);
+        return current || p;
+      }).filter(Boolean);
+    }
+
+    if (updates.sittingOut) {
+      normalizedUpdates.sittingOut = updates.sittingOut.map(p => {
+        if (typeof p === 'string') {
+          return getPlayerByName(p);
+        }
+        const current = getPlayerByName(p.name);
+        return current || p;
+      }).filter(Boolean);
+    }
+
+    // Validate before applying
+    if (!validateRosterUpdate(normalizedUpdates)) {
+      console.error('❌ Roster update validation failed. Update aborted.');
+      return;
+    }
+
+    console.log('✅ Roster update validated successfully');
     setPlayers(prev => ({
       ...prev,
-      ...updates
+      ...normalizedUpdates
     }));
-  }, []);
+  }, [allSessionPlayers, getPlayerByName, validateRosterUpdate]);
 
   // Mark game winner and save
   const markWinner = useCallback(async (winningTeam) => {
@@ -256,19 +359,34 @@ export const LiveSessionProvider = ({ children }) => {
         throw updateError;
       }
 
-      // Update local state optimistically
+      // Update local state optimistically - MUST update allSessionPlayers too!
+      const updatedTeamA = players.teamA.map(p => ({
+        ...p,
+        gamesPlayed: p.gamesPlayed + 1,
+        gamesWon: p.gamesWon + (winningTeam === 'team_a' ? 1 : 0)
+      }));
+
+      const updatedTeamB = players.teamB.map(p => ({
+        ...p,
+        gamesPlayed: p.gamesPlayed + 1,
+        gamesWon: p.gamesWon + (winningTeam === 'team_b' ? 1 : 0)
+      }));
+
       setPlayers(prev => ({
         ...prev,
-        teamA: prev.teamA.map(p => ({
-          ...p,
-          gamesPlayed: p.gamesPlayed + 1,
-          gamesWon: p.gamesWon + (winningTeam === 'team_a' ? 1 : 0)
-        })),
-        teamB: prev.teamB.map(p => ({
-          ...p,
-          gamesPlayed: p.gamesPlayed + 1,
-          gamesWon: p.gamesWon + (winningTeam === 'team_b' ? 1 : 0)
-        }))
+        teamA: updatedTeamA,
+        teamB: updatedTeamB
+      }));
+
+      // Update master list with new stats
+      setAllSessionPlayers(prev => prev.map(p => {
+        const updatedInTeamA = updatedTeamA.find(t => t.name === p.name);
+        if (updatedInTeamA) return updatedInTeamA;
+
+        const updatedInTeamB = updatedTeamB.find(t => t.name === p.name);
+        if (updatedInTeamB) return updatedInTeamB;
+
+        return p;
       }));
 
       setGames(prev => [...prev, gameData]);
@@ -475,10 +593,15 @@ export const LiveSessionProvider = ({ children }) => {
 
       if (insertError) throw insertError;
 
+      const newPlayer = { name: playerName, gamesPlayed: 0, gamesWon: 0 };
+
+      // Add player to master list
+      setAllSessionPlayers(prev => [...prev, newPlayer]);
+
       // Add player to local state (on the bench)
       setPlayers(prev => ({
         ...prev,
-        sittingOut: [...prev.sittingOut, { name: playerName, gamesPlayed: 0, gamesWon: 0 }]
+        sittingOut: [...prev.sittingOut, newPlayer]
       }));
 
       return { success: true };
@@ -492,6 +615,7 @@ export const LiveSessionProvider = ({ children }) => {
     session,
     games,
     players,
+    allSessionPlayers,
     gameNumber,
     isLoading,
     error,
