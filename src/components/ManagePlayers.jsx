@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import EditPlayerModal from './EditPlayerModal';
 import { useUI } from '../context/ui-context';
+import { isGuest } from '../utils/guests';
 
 const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
   const { toast, confirm } = useUI();
@@ -128,7 +129,10 @@ const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
 
                 {/* Player Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-ink">{player.name}</h3>
+                  <h3 className="text-xl font-bold text-ink flex items-center gap-2">
+                    {player.name}
+                    {isGuest(player.name) && <span className="text-[10px] font-bold tracking-[0.08em] text-ink-3">GUEST · hidden from standings</span>}
+                  </h3>
                   <div className="flex gap-4 text-sm text-ink-2 mt-1">
                     <span><strong className="text-ink">{player.totalGamesPlayed}</strong> games</span>
                     <span><strong className="text-ink">{player.totalGamesWon}</strong> wins</span>

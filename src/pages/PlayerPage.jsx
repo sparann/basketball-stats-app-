@@ -10,6 +10,7 @@ import Icon from '../components/ui/Icon';
 import Sheet from '../components/ui/Sheet';
 import Button from '../components/ui/Button';
 import WinBars from '../components/ui/WinBars';
+import { isGuest, onlyRegulars } from '../utils/guests';
 
 const MIN_GAMES_TOGETHER = 5;
 const MIN_GAMES_AT_COURT = 5;
@@ -96,7 +97,7 @@ const PlayerPage = () => {
   }, [playerName, player?.sessionsAttended]);
 
   const standing = useMemo(() => {
-    const { active } = computeStandings(players);
+    const { active } = computeStandings(onlyRegulars(players));
     return active.find((p) => p.name === playerName) || null;
   }, [players, playerName]);
 
@@ -107,7 +108,7 @@ const PlayerPage = () => {
       const onB = game.team_b_players?.includes(playerName);
       if (!onA && !onB) continue;
       const team = onA ? 'team_a' : 'team_b';
-      const teammates = (onA ? game.team_a_players : game.team_b_players).filter((n) => n !== playerName);
+      const teammates = (onA ? game.team_a_players : game.team_b_players).filter((n) => n !== playerName && !isGuest(n));
       for (const mate of teammates) {
         byTeammate[mate] ||= { gamesPlayed: 0, gamesWon: 0 };
         byTeammate[mate].gamesPlayed++;
@@ -137,13 +138,17 @@ const PlayerPage = () => {
       .sort((a, b) => b.winRate - a.winRate)[0] || null;
   }, [sessions, playerName]);
 
-  if (!player) {
+  if (!player || isGuest(playerName)) {
     return (
       <div className="max-w-2xl mx-auto px-5 pt-[calc(env(safe-area-inset-top)+16px)]">
         <Button variant="ghost" onClick={() => navigate('/')}>
           <Icon name="chevronLeft" /> Standings
         </Button>
-        <p className="mt-8 text-ink-2">No player named {playerName}.</p>
+        <p className="mt-8 text-ink-2">
+          {isGuest(playerName)
+            ? `${playerName} is a guest slot: different people on different nights, so there is no profile.`
+            : `No player named ${playerName}.`}
+        </p>
       </div>
     );
   }

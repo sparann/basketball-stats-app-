@@ -5,6 +5,7 @@ import { isLocalLiveStore } from '../../lib/liveSessionStore';
 import { formatDate } from '../../utils/calculations';
 import { shortName } from '../../utils/names';
 import { TEAMS, TEAM_LABELS, teamRecord, winStreak } from '../../utils/liveStats';
+import { isGuest, nextGuestName } from '../../utils/guests';
 import Icon from '../ui/Icon';
 import Button from '../ui/Button';
 import Sheet from '../ui/Sheet';
@@ -14,6 +15,7 @@ import RotationScreen from './RotationScreen';
 import EndSessionSheet from './EndSessionSheet';
 import AddPlayerSheet from './AddPlayerSheet';
 import SessionStandingsSheet from './SessionStandingsSheet';
+import GuestSheet from './GuestSheet';
 
 const IconButton = ({ icon, label, onClick }) => (
   <button
@@ -26,19 +28,35 @@ const IconButton = ({ icon, label, onClick }) => (
   </button>
 );
 
-const TeamCard = ({ team, players, record, allNames }) => (
+const TeamCard = ({ team, players, record, allNames, onGuestTap }) => (
   <section className="bg-surface rounded-2xl px-3 pt-2.5 pb-1.5">
     <div className="flex items-center justify-between pb-1.5 border-b border-line">
       <TeamPill team={team} />
       <span className="display text-lg text-ink">{record.wins}–{record.losses}</span>
     </div>
     <ul>
-      {players.map((p) => (
-        <li key={p.name} className="flex items-center justify-between gap-2 h-[38px]">
-          <span className="text-[15px] font-semibold text-ink truncate">{shortName(p.name, allNames)}</span>
-          <span className="text-xs text-ink-2 tabular shrink-0">{p.gamesWon}–{p.gamesPlayed - p.gamesWon}</span>
-        </li>
-      ))}
+      {players.map((p) => {
+        const guest = isGuest(p.name);
+        const inner = (
+          <>
+            <span className={`text-[15px] font-semibold truncate ${guest ? 'text-ink-2 italic' : 'text-ink'}`}>
+              {shortName(p.name, allNames)}
+            </span>
+            <span className="text-xs text-ink-2 tabular shrink-0">{p.gamesWon}–{p.gamesPlayed - p.gamesWon}</span>
+          </>
+        );
+        return (
+          <li key={p.name} className="h-[38px]">
+            {guest ? (
+              <button type="button" onClick={() => onGuestTap(p.name)} className="w-full h-full flex items-center justify-between gap-2 text-left">
+                {inner}
+              </button>
+            ) : (
+              <div className="h-full flex items-center justify-between gap-2">{inner}</div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   </section>
 );
@@ -85,7 +103,7 @@ const useWakeLock = () => {
  * thumb. After a result the buttons give way to Next Game / Reshoot / End.
  */
 const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
-  const { session, teams, allPlayers, games, gameNumber, isSaving, actions } = useLiveSession();
+  const { session, teams, allPlayers, roster, games, gameNumber, isSaving, actions } = useLiveSession();
   const { toast, confirm } = useUI();
   useWakeLock();
 
@@ -97,6 +115,7 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [standingsOpen, setStandingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [guestSheet, setGuestSheet] = useState(null); // guest name being edited
 
   const allNames = useMemo(() => allPlayers.map((p) => p.name), [allPlayers]);
   const teamsAreSet = teams.teamA.length > 0 && teams.teamB.length > 0;
@@ -155,6 +174,17 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
     }
   };
 
+  // One tap, no typing. Guests live only inside tonight.
+  const addGuest = async () => {
+    const label = nextGuestName(roster);
+    try {
+      await actions.addPlayer(label, { guest: true });
+      toast(`${label} is on the bench`);
+    } catch (error) {
+      toast(`Couldn't add a guest: ${error.message}`, { type: 'error' });
+    }
+  };
+
   const handlePause = async () => {
     if (games.length > 0) {
       const ok = await confirm({
@@ -203,8 +233,8 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
 
       <main className="flex-1 overflow-y-auto px-4 pt-3 pb-3">
         <div className="grid grid-cols-2 gap-3">
-          <TeamCard team="team_a" players={teams.teamA} record={teamRecord(games, 'team_a')} allNames={allNames} />
-          <TeamCard team="team_b" players={teams.teamB} record={teamRecord(games, 'team_b')} allNames={allNames} />
+          <TeamCard team="team_a" players={teams.teamA} record={teamRecord(games, 'team_a')} allNames={allNames} onGuestTap={setGuestSheet} />
+          <TeamCard team="team_b" players={teams.teamB} record={teamRecord(games, 'team_b')} allNames={allNames} onGuestTap={setGuestSheet} />
         </div>
 
         <section className="mt-4">
@@ -213,16 +243,36 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
             <span className="text-[11px] font-semibold text-ink-3 tabular">{teams.bench.length}</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {teams.bench.map((p) => (
-              <span key={p.name} className="h-9 px-3 rounded-full bg-surface border border-line flex items-center gap-2 text-sm font-semibold text-ink">
-                {shortName(p.name, allNames)}
-                <span className="text-xs font-medium text-ink-2 tabular">{p.gamesWon}–{p.gamesPlayed - p.gamesWon}</span>
-              </span>
-            ))}
+            {teams.bench.map((p) =>
+              isGuest(p.name) ? (
+                <button
+                  key={p.name}
+                  type="button"
+                  onClick={() => setGuestSheet(p.name)}
+                  className="h-9 px-3 rounded-full bg-surface border border-dashed border-line-strong flex items-center gap-2 text-sm font-semibold text-ink-2 italic"
+                >
+                  {p.name}
+                  <span className="text-xs font-medium not-italic tabular">{p.gamesWon}–{p.gamesPlayed - p.gamesWon}</span>
+                </button>
+              ) : (
+                <span key={p.name} className="h-9 px-3 rounded-full bg-surface border border-line flex items-center gap-2 text-sm font-semibold text-ink">
+                  {shortName(p.name, allNames)}
+                  <span className="text-xs font-medium text-ink-2 tabular">{p.gamesWon}–{p.gamesPlayed - p.gamesWon}</span>
+                </span>
+              )
+            )}
+            <button
+              type="button"
+              onClick={addGuest}
+              disabled={isSaving}
+              className="h-9 px-3 rounded-full bg-surface-2 text-ink text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Icon name="plus" size={14} /> Guest
+            </button>
             <button
               type="button"
               onClick={() => setAddOpen(true)}
-              aria-label="Add a player"
+              aria-label="Add a player from the group"
               className="h-9 w-9 rounded-full bg-surface border border-dashed border-line-strong flex items-center justify-center text-ink-2"
             >
               <Icon name="plus" size={16} />
@@ -300,6 +350,7 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
         </div>
       </Sheet>
       <AddPlayerSheet open={addOpen} onClose={() => setAddOpen(false)} />
+      {guestSheet && <GuestSheet name={guestSheet} onClose={() => setGuestSheet(null)} />}
       <SessionStandingsSheet open={standingsOpen} onClose={() => setStandingsOpen(false)} />
       <EndSessionSheet
         open={endOpen}

@@ -1,3 +1,5 @@
+import { isGuest } from './guests';
+
 /**
  * Calculate win percentage
  * @param {number} won - Games won
@@ -254,7 +256,7 @@ export const getSessionTotalGames = (session) =>
 export const getSessionTopPerformers = (session) => {
   const totalGames = getSessionTotalGames(session);
   const eligible = (session.players || [])
-    .filter((p) => p.gamesPlayed >= totalGames * 0.5)
+    .filter((p) => !isGuest(p) && p.gamesPlayed >= totalGames * 0.5)
     .map((p) => ({ ...p, winPercentage: calculateWinPercentage(p.gamesWon, p.gamesPlayed) }));
 
   if (eligible.length === 0) return [];

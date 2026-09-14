@@ -52,6 +52,17 @@ Tokens are Tailwind classes from `tailwind.config.js`:
 - Anyone can change a player's photo or injured flag from the player page.
   Undecided whether that should move behind admin.
 
+## Guests
+
+Outsiders who join a run are guests. Courtside, the Guest button adds "Guest N"
+for the night with no typing; tapping a guest chip lets Wyatt name them or make
+them a regular. `utils/guests.js` is the rule: anyone named "Guest …" or
+"Random …" (or flagged `guest: true` in a session row) is a guest. Guests get no
+players row, never appear in standings or the games-minimum average, are not
+MVP-eligible, are skipped by teammate insights, and have no profile page. The
+old Random 1/2/3 profiles are guests by that rule; never delete them, their
+games are in real sessions.
+
 ## Data gotchas
 
 - Names are the join key everywhere. Renaming goes through

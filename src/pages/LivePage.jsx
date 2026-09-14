@@ -9,6 +9,7 @@ import { formatDate } from '../utils/calculations';
 import { shortName } from '../utils/names';
 import PageHeader from '../components/ui/PageHeader';
 import Avatar from '../components/ui/Avatar';
+import { isGuest } from '../utils/guests';
 
 const POLL_MS = 20000;
 
@@ -108,7 +109,7 @@ const LivePage = () => {
         <div key={p.name} className="flex items-center gap-3 h-[56px] px-5 border-t border-line">
           <span className={`display w-[26px] text-[22px] leading-none ${i < 3 && p.gamesPlayed > 0 ? 'text-accent' : 'text-ink-3'}`}>{i + 1}</span>
           <Avatar name={p.name} pictureUrl={pictureFor(p.name)} size={32} />
-          <span className="flex-1 text-[16px] font-semibold text-ink truncate">{shortName(p.name, roster)}</span>
+          <span className={`flex-1 text-[16px] font-semibold truncate ${isGuest(p.name) ? 'text-ink-2 italic' : 'text-ink'}`}>{shortName(p.name, roster)}</span>
           <span className="text-xs text-ink-2 tabular">{p.gamesWon}–{p.gamesPlayed - p.gamesWon}</span>
           <span className="display w-14 text-right text-2xl text-ink">
             {p.gamesPlayed ? `${Math.round((p.gamesWon / p.gamesPlayed) * 100)}%` : '—'}

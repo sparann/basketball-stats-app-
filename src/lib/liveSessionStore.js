@@ -73,6 +73,19 @@ const localBackend = {
     writeLocal(db);
   },
 
+  async renameRosterPlayer(sessionId, oldName, newName) {
+    const db = readLocal();
+    const swap = (n) => (n === oldName ? newName : n);
+    db.roster[sessionId] = (db.roster[sessionId] || []).map(swap);
+    db.games[sessionId] = (db.games[sessionId] || []).map((g) => ({
+      ...g,
+      team_a_players: (g.team_a_players || []).map(swap),
+      team_b_players: (g.team_b_players || []).map(swap),
+      sitting_out_players: (g.sitting_out_players || []).map(swap)
+    }));
+    writeLocal(db);
+  },
+
   async listPlayerNames() {
     return [];
   },
@@ -98,6 +111,19 @@ const localBackend = {
 
   subscribeToGames() {
     return () => {};
+  }
+};
+
+const ensurePlayerRow = async (name) => {
+  const { data: existing, error: lookupError } = await supabase
+    .from('players')
+    .select('name')
+    .eq('name', name)
+    .maybeSingle();
+  if (lookupError) throw lookupError;
+  if (!existing) {
+    const { error } = await supabase.from('players').insert({ name });
+    if (error) throw error;
   }
 };
 
@@ -160,23 +186,47 @@ const supabaseBackend = {
     if (error) throw error;
   },
 
-  async addRosterPlayer(sessionId, name) {
-    // Standings are built from players, so a brand-new name needs a row there
-    const { data: existing, error: lookupError } = await supabase
-      .from('players')
-      .select('name')
-      .eq('name', name)
-      .maybeSingle();
-    if (lookupError) throw lookupError;
-    if (!existing) {
-      const { error } = await supabase.from('players').insert({ name });
-      if (error) throw error;
-    }
+  /** Standings are built from players, so a regular needs a row there. Guests never get one. */
+  async addRosterPlayer(sessionId, name, { guest = false } = {}) {
+    if (!guest) await ensurePlayerRow(name);
 
     const { error } = await supabase
       .from('live_session_players')
       .insert({ live_session_id: sessionId, player_name: name });
     if (error) throw error;
+  },
+
+  /** Rename someone inside one session (a guest who gave their name). promote adds a players row. */
+  async renameRosterPlayer(sessionId, oldName, newName, { promote = false } = {}) {
+    if (promote) await ensurePlayerRow(newName);
+
+    const { error: rosterError } = await supabase
+      .from('live_session_players')
+      .update({ player_name: newName })
+      .eq('live_session_id', sessionId)
+      .eq('player_name', oldName);
+    if (rosterError) throw rosterError;
+
+    const { data: games, error: gamesError } = await supabase
+      .from('games')
+      .select('id, team_a_players, team_b_players, sitting_out_players')
+      .eq('live_session_id', sessionId);
+    if (gamesError) throw gamesError;
+
+    const swap = (n) => (n === oldName ? newName : n);
+    for (const game of games || []) {
+      const lists = [game.team_a_players, game.team_b_players, game.sitting_out_players];
+      if (!lists.some((l) => Array.isArray(l) && l.includes(oldName))) continue;
+      const { error } = await supabase
+        .from('games')
+        .update({
+          team_a_players: (game.team_a_players || []).map(swap),
+          team_b_players: (game.team_b_players || []).map(swap),
+          sitting_out_players: (game.sitting_out_players || []).map(swap)
+        })
+        .eq('id', game.id);
+      if (error) throw error;
+    }
   },
 
   async listPlayerNames() {

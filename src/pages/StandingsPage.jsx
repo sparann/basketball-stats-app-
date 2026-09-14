@@ -10,6 +10,7 @@ import {
   parseLocalDate
 } from '../utils/calculations';
 import { shortName } from '../utils/names';
+import { isGuest, onlyRegulars } from '../utils/guests';
 import PageHeader from '../components/ui/PageHeader';
 import Avatar from '../components/ui/Avatar';
 import Sparkline from '../components/ui/Sparkline';
@@ -196,14 +197,16 @@ const StandingsPage = () => {
     }
   };
 
+  const regulars = useMemo(() => onlyRegulars(players), [players]);
+
   const scopedPlayers = useMemo(() => {
-    if (period === 'allTime') return players;
+    if (period === 'allTime') return regulars;
     const filtered = filterSessionsByPeriod(sessions, period);
-    return aggregatePlayerStats(filtered).map((p) => {
+    return aggregatePlayerStats(filtered).filter((p) => !isGuest(p)).map((p) => {
       const base = players.find((x) => x.name === p.name);
       return { ...p, injured: base?.injured || false, pictureUrl: base?.pictureUrl || '', height: base?.height || '', weight: base?.weight || '' };
     });
-  }, [players, sessions, period]);
+  }, [players, regulars, sessions, period]);
 
   const standings = useMemo(() => computeStandings(scopedPlayers, sortBy), [scopedPlayers, sortBy]);
   const allNames = useMemo(() => scopedPlayers.map((p) => p.name), [scopedPlayers]);
@@ -260,7 +263,7 @@ const StandingsPage = () => {
 
       {standings.active.length === 0 ? (
         <p className="px-5 py-8 text-sm text-ink-2 border-t border-line">
-          {players.length === 0 ? 'No games recorded yet.' : 'Nobody qualifies for the standings yet. Everyone is listed below.'}
+          {regulars.length === 0 ? 'No games recorded yet.' : 'Nobody qualifies for the standings yet. Everyone is listed below.'}
         </p>
       ) : (
         renderGroup(standings.active, true)

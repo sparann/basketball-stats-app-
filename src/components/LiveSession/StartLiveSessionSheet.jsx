@@ -6,6 +6,7 @@ import Sheet from '../ui/Sheet';
 import Button from '../ui/Button';
 import Avatar from '../ui/Avatar';
 import Icon from '../ui/Icon';
+import { isGuest } from '../../utils/guests';
 
 const MIN_PLAYERS = 4;
 
@@ -35,7 +36,7 @@ const StartLiveSessionSheet = ({ onClose, onStarted }) => {
 
   const sorted = useMemo(
     () =>
-      [...players].sort((a, b) => {
+      players.filter((p) => !isGuest(p)).sort((a, b) => {
         if (a.lastPlayed && b.lastPlayed) return a.lastPlayed < b.lastPlayed ? 1 : -1;
         if (a.lastPlayed) return -1;
         if (b.lastPlayed) return 1;
@@ -56,7 +57,7 @@ const StartLiveSessionSheet = ({ onClose, onStarted }) => {
   const sameCrew = () => {
     if (!lastSession) return;
     const known = new Set(players.map((p) => p.name));
-    setPicked(new Set(lastSession.players.map((p) => p.name).filter((n) => known.has(n))));
+    setPicked(new Set(lastSession.players.map((p) => p.name).filter((n) => known.has(n) && !isGuest(n))));
   };
 
   const start = async () => {

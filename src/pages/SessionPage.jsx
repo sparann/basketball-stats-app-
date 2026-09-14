@@ -11,6 +11,7 @@ import {
 import Avatar from '../components/ui/Avatar';
 import Icon from '../components/ui/Icon';
 import Button from '../components/ui/Button';
+import { isGuest } from '../utils/guests';
 
 const Tile = ({ label, value }) => (
   <div className="bg-surface rounded-xl px-3 py-2.5">
@@ -92,18 +93,22 @@ const SessionPage = () => {
       {withRanks.map((p) => {
         const full = players.find((x) => x.name === p.name);
         const isMvp = mvpNames.has(p.name);
+        const guest = isGuest(p);
+        const Row = guest ? 'div' : Link;
+        const rowProps = guest ? {} : { to: `/players/${encodeURIComponent(p.name)}` };
         return (
-          <Link
+          <Row
             key={p.name}
-            to={`/players/${encodeURIComponent(p.name)}`}
-            className="flex items-center gap-3 h-[60px] px-5 border-t border-line active:bg-surface-raised"
+            {...rowProps}
+            className={`flex items-center gap-3 h-[60px] px-5 border-t border-line ${guest ? '' : 'active:bg-surface-raised'}`}
           >
             <div className={`display w-[26px] text-[22px] leading-none ${isMvp ? 'text-accent' : 'text-ink-3'}`}>{p.rank}</div>
             <Avatar name={p.name} pictureUrl={full?.pictureUrl} size={36} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[16px] font-semibold text-ink truncate">{p.name}</span>
+                <span className={`text-[16px] font-semibold truncate ${guest ? 'text-ink-2 italic' : 'text-ink'}`}>{p.name}</span>
                 {isMvp && <span className="text-[10px] font-bold tracking-[0.08em] text-accent">MVP</span>}
+                {guest && <span className="text-[10px] font-bold tracking-[0.08em] text-ink-3">GUEST</span>}
               </div>
               <div className="text-xs text-ink-2 tabular mt-0.5">
                 {p.gamesWon}–{p.gamesPlayed - p.gamesWon} · {p.gamesPlayed} games
@@ -111,7 +116,7 @@ const SessionPage = () => {
               </div>
             </div>
             <div className="display text-2xl text-ink">{formatWinPercentage(p.winPercentage, p.gamesPlayed)}</div>
-          </Link>
+          </Row>
         );
       })}
 

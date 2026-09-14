@@ -5,6 +5,8 @@ import { useUI } from '../../context/ui-context';
 import Sheet from '../ui/Sheet';
 import Button from '../ui/Button';
 import Avatar from '../ui/Avatar';
+import Icon from '../ui/Icon';
+import { isGuest, nextGuestName } from '../../utils/guests';
 
 /** Add a late arrival: pick an existing player or type a new name. */
 const AddPlayerSheet = ({ open, onClose }) => {
@@ -22,15 +24,15 @@ const AddPlayerSheet = ({ open, onClose }) => {
   const q = query.trim().toLowerCase();
   const available = players
     .map((p) => p.name)
-    .filter((name) => !inSession.has(name))
+    .filter((name) => !isGuest(name) && !inSession.has(name))
     .filter((name) => name.toLowerCase().includes(q));
   const exactAvailable = available.some((name) => name.toLowerCase() === q);
   const alreadyHere = roster.some((name) => name.toLowerCase() === q);
 
-  const add = async (name) => {
+  const add = async (name, options = {}) => {
     setBusy(true);
     try {
-      await actions.addPlayer(name);
+      await actions.addPlayer(name, options);
       toast(`${name} added to the bench`);
       onClose();
     } catch (error) {
@@ -42,6 +44,10 @@ const AddPlayerSheet = ({ open, onClose }) => {
 
   return (
     <Sheet open={open} onClose={onClose} title="Add a player">
+      <Button variant="secondary" size="lg" className="w-full justify-start mb-3" onClick={() => add(nextGuestName(roster), { guest: true })} disabled={busy}>
+        <Icon name="plus" /> Add a guest, no name needed
+      </Button>
+      <div className="eyebrow mb-2">Or someone from the group</div>
       <input
         type="text"
         value={query}
@@ -79,7 +85,7 @@ const AddPlayerSheet = ({ open, onClose }) => {
         </Button>
       )}
 
-      <p className="mt-3 text-xs text-ink-3">New players go to the bench and can rotate in for the next game.</p>
+      <p className="mt-3 text-xs text-ink-3">Everyone lands on the bench and can rotate in for the next game. Guests stay out of the standings.</p>
     </Sheet>
   );
 };

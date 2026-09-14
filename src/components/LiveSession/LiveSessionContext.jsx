@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { liveSessionStore } from '../../lib/liveSessionStore';
 import { deriveSessionStats, lineupFromGames, lineupProblem } from '../../utils/liveStats';
+import { isGuest } from '../../utils/guests';
 
 const LiveSessionContext = createContext(null);
 
@@ -133,14 +134,40 @@ export const LiveSessionProvider = ({ children }) => {
   );
 
   const addPlayer = useCallback(
-    (name) =>
+    (name, { guest = false } = {}) =>
       run(setIsSaving, async () => {
         if (!session) throw new Error('No session');
-        await liveSessionStore.addRosterPlayer(session.id, name);
+        await liveSessionStore.addRosterPlayer(session.id, name, { guest });
         setRoster((current) => [...current, name]);
         setLineup((current) => ({ ...current, bench: [...current.bench, name] }));
       }),
     [session]
+  );
+
+  /** Give a guest their name, or promote them to a regular. Applies to this session's rows. */
+  const renamePlayer = useCallback(
+    (oldName, newName, { promote = false } = {}) =>
+      run(setIsSaving, async () => {
+        if (!session) throw new Error('No session');
+        if (!roster.includes(oldName)) throw new Error(`${oldName} is not in this session`);
+        await liveSessionStore.renameRosterPlayer(session.id, oldName, newName, { promote });
+        const swap = (n) => (n === oldName ? newName : n);
+        setRoster((current) => current.map(swap));
+        setLineup((current) => ({
+          teamA: current.teamA.map(swap),
+          teamB: current.teamB.map(swap),
+          bench: current.bench.map(swap)
+        }));
+        setGames((current) =>
+          current.map((g) => ({
+            ...g,
+            team_a_players: (g.team_a_players || []).map(swap),
+            team_b_players: (g.team_b_players || []).map(swap),
+            sitting_out_players: (g.sitting_out_players || []).map(swap)
+          }))
+        );
+      }),
+    [session, roster]
   );
 
   const endSession = useCallback(
@@ -155,7 +182,8 @@ export const LiveSessionProvider = ({ children }) => {
             name: p.name,
             gamesPlayed: p.gamesPlayed,
             gamesWon: p.gamesWon,
-            notes: ''
+            notes: '',
+            ...(isGuest(p.name) ? { guest: true } : {})
           }))
         };
         await liveSessionStore.completeSession(session, aggregated);
@@ -179,7 +207,7 @@ export const LiveSessionProvider = ({ children }) => {
     isLoading,
     isSaving,
     error,
-    actions: { startSession, resumeSession, updateLineup, recordWinner, undoLastGame, addPlayer, endSession }
+    actions: { startSession, resumeSession, updateLineup, recordWinner, undoLastGame, addPlayer, renamePlayer, endSession }
   };
 
   return <LiveSessionContext.Provider value={value}>{children}</LiveSessionContext.Provider>;
