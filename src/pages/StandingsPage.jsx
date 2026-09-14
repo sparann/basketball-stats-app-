@@ -121,7 +121,7 @@ const StandingCard = ({ player, rank }) => {
       </div>
 
       <div className="mt-4">
-        <WinBars sessions={recent} slots={5} height={28} />
+        <WinBars sessions={recent} slots={5} height={28} labels={false} />
       </div>
     </Link>
   );
