@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { liveSessionStore } from '../../lib/liveSessionStore';
+import { deriveSessionStats, lineupFromGames, lineupProblem } from '../../utils/liveStats';
 
 const LiveSessionContext = createContext(null);
 
@@ -12,645 +13,174 @@ export const useLiveSession = () => {
   return context;
 };
 
+/**
+ * State for one courtside session.
+ *
+ * The source of truth is the list of game rows. Player records, team
+ * records and the end-of-night summary are all derived from it, so
+ * recording a game is one insert and undoing it is one delete.
+ */
 export const LiveSessionProvider = ({ children }) => {
   const [session, setSession] = useState(null);
+  const [roster, setRoster] = useState([]); // player names in this session
   const [games, setGames] = useState([]);
-  const [players, setPlayers] = useState({
-    teamA: [],
-    teamB: [],
-    sittingOut: []
-  });
-  const [allSessionPlayers, setAllSessionPlayers] = useState([]); // Master list - source of truth
-  const [gameNumber, setGameNumber] = useState(1);
+  const [lineup, setLineup] = useState({ teamA: [], teamB: [], bench: [] }); // names
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  // Calculate win streaks
-  const getWinStreak = useCallback((team) => {
-    let streak = 0;
-    // Count backwards from most recent game
-    for (let i = games.length - 1; i >= 0; i--) {
-      if (games[i].winning_team === team) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    return streak;
-  }, [games]);
+  const statsByName = useMemo(
+    () => new Map(deriveSessionStats(games, roster).map((p) => [p.name, p])),
+    [games, roster]
+  );
+  const toPlayer = useCallback(
+    (name) => statsByName.get(name) || { name, gamesPlayed: 0, gamesWon: 0 },
+    [statsByName]
+  );
 
-  // Auto-save to localStorage for offline support
-  useEffect(() => {
-    if (session) {
-      const backup = {
-        session,
-        games,
-        players,
-        allSessionPlayers,
-        gameNumber,
-        timestamp: Date.now()
-      };
-      localStorage.setItem('liveSessionBackup', JSON.stringify(backup));
-    }
-  }, [session, games, players, allSessionPlayers, gameNumber]);
+  const teams = useMemo(
+    () => ({
+      teamA: lineup.teamA.map(toPlayer),
+      teamB: lineup.teamB.map(toPlayer),
+      bench: lineup.bench.map(toPlayer)
+    }),
+    [lineup, toPlayer]
+  );
+  const allPlayers = useMemo(() => roster.map(toPlayer), [roster, toPlayer]);
+  const gameNumber = games.length + 1;
 
-  // Initialize new session
-  const startSession = useCallback(async (date, location, selectedPlayers) => {
-    setIsLoading(true);
+  const run = async (setBusy, work) => {
+    setBusy(true);
     setError(null);
-
     try {
-      // Create live session in database
-      const now = new Date().toISOString();
-      const { data: newSession, error: sessionError } = await supabase
-        .from('live_sessions')
-        .insert({
-          date,
-          location,
-          status: 'active',
-          started_at: now
-        })
-        .select()
-        .single();
-
-      if (sessionError) throw sessionError;
-
-      // selectedPlayers can be either strings (old format) or objects with {name, pictureUrl}
-      const playerInserts = selectedPlayers.map(player => {
-        const playerName = typeof player === 'string' ? player : player.name;
-        return {
-          live_session_id: newSession.id,
-          player_name: playerName,
-          total_games_played: 0,
-          total_games_won: 0
-        };
-      });
-
-      const { error: playersError } = await supabase
-        .from('live_session_players')
-        .insert(playerInserts);
-
-      if (playersError) throw playersError;
-
-      // Initialize player objects with stats and pictureUrl
-      const playerObjects = selectedPlayers.map(player => {
-        if (typeof player === 'string') {
-          return {
-            name: player,
-            gamesPlayed: 0,
-            gamesWon: 0,
-            pictureUrl: null
-          };
-        }
-        return {
-          name: player.name,
-          gamesPlayed: 0,
-          gamesWon: 0,
-          pictureUrl: player.pictureUrl || null
-        };
-      });
-
-      setSession(newSession);
-      setAllSessionPlayers(playerObjects); // Set master list
-      setPlayers({
-        teamA: [],
-        teamB: [],
-        sittingOut: playerObjects
-      });
-      setGameNumber(1);
-      setGames([]);
-
-      return newSession;
+      return await work();
     } catch (err) {
       setError(err.message);
       throw err;
     } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Resume existing session
-  const resumeSession = useCallback(async (sessionId) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Fetch session
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('live_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single();
-
-      if (sessionError) throw sessionError;
-
-      // Fetch players
-      const { data: playersData, error: playersError } = await supabase
-        .from('live_session_players')
-        .select('*')
-        .eq('live_session_id', sessionId);
-
-      if (playersError) throw playersError;
-
-      // Fetch games
-      const { data: gamesData, error: gamesError } = await supabase
-        .from('games')
-        .select('*')
-        .eq('live_session_id', sessionId)
-        .order('game_number', { ascending: true });
-
-      if (gamesError) throw gamesError;
-
-      // Reconstruct state from last game
-      const lastGame = gamesData[gamesData.length - 1];
-      const playerObjects = playersData.map(p => ({
-        name: p.player_name,
-        gamesPlayed: p.total_games_played,
-        gamesWon: p.total_games_won
-      }));
-
-      setSession(sessionData);
-      setAllSessionPlayers(playerObjects); // Set master list
-      setGames(gamesData);
-      setGameNumber(gamesData.length + 1);
-
-      if (lastGame && Array.isArray(lastGame.team_a_players) && Array.isArray(lastGame.team_b_players)) {
-        // Reconstruct teams from last game
-        const teamA = playerObjects.filter(p =>
-          lastGame.team_a_players.includes(p.name)
-        );
-        const teamB = playerObjects.filter(p =>
-          lastGame.team_b_players.includes(p.name)
-        );
-        const sittingOut = playerObjects.filter(p =>
-          !lastGame.team_a_players.includes(p.name) &&
-          !lastGame.team_b_players.includes(p.name)
-        );
-
-        setPlayers({ teamA, teamB, sittingOut });
-      } else {
-        // No valid games or empty arrays - all players sit
-        setPlayers({
-          teamA: [],
-          teamB: [],
-          sittingOut: playerObjects
-        });
-      }
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Helper: Reconstruct player object from name using master list
-  const getPlayerByName = useCallback((name) => {
-    const player = allSessionPlayers.find(p => p.name === name);
-    if (!player) {
-      console.error(`⚠️ Player "${name}" not found in session player list`);
-      return null;
-    }
-    return player;
-  }, [allSessionPlayers]);
-
-  // Helper: Validate roster update before applying
-  const validateRosterUpdate = useCallback((updates) => {
-    const allNames = [
-      ...(updates.teamA || []).map(p => typeof p === 'string' ? p : p.name),
-      ...(updates.teamB || []).map(p => typeof p === 'string' ? p : p.name),
-      ...(updates.sittingOut || []).map(p => typeof p === 'string' ? p : p.name)
-    ];
-
-    // Check for duplicates
-    const nameSet = new Set(allNames);
-    if (nameSet.size !== allNames.length) {
-      console.error('⚠️ Duplicate players detected in roster update');
-      return false;
-    }
-
-    // Check all names exist in master list
-    for (const name of allNames) {
-      if (!allSessionPlayers.find(p => p.name === name)) {
-        console.error(`⚠️ Player "${name}" not in session`);
-        return false;
-      }
-    }
-
-    // Check all session players are accounted for
-    if (nameSet.size !== allSessionPlayers.length) {
-      console.warn(`⚠️ Roster update missing players. Expected ${allSessionPlayers.length}, got ${nameSet.size}`);
-      const missingPlayers = allSessionPlayers.filter(p => !nameSet.has(p.name));
-      console.warn('Missing players:', missingPlayers.map(p => p.name));
-      return false;
-    }
-
-    return true;
-  }, [allSessionPlayers]);
-
-  // Update team rosters (with validation)
-  const updateRoster = useCallback((updates) => {
-    // Convert player names to full player objects from master list
-    const normalizedUpdates = {};
-
-    if (updates.teamA) {
-      normalizedUpdates.teamA = updates.teamA.map(p => {
-        if (typeof p === 'string') {
-          return getPlayerByName(p);
-        }
-        // If it's already an object, verify it's current
-        const current = getPlayerByName(p.name);
-        return current || p;
-      }).filter(Boolean); // Remove nulls
-    }
-
-    if (updates.teamB) {
-      normalizedUpdates.teamB = updates.teamB.map(p => {
-        if (typeof p === 'string') {
-          return getPlayerByName(p);
-        }
-        const current = getPlayerByName(p.name);
-        return current || p;
-      }).filter(Boolean);
-    }
-
-    if (updates.sittingOut) {
-      normalizedUpdates.sittingOut = updates.sittingOut.map(p => {
-        if (typeof p === 'string') {
-          return getPlayerByName(p);
-        }
-        const current = getPlayerByName(p.name);
-        return current || p;
-      }).filter(Boolean);
-    }
-
-    // Validate before applying
-    if (!validateRosterUpdate(normalizedUpdates)) {
-      console.error('❌ Roster update validation failed. Update aborted.');
-      return;
-    }
-
-    setPlayers(prev => ({
-      ...prev,
-      ...normalizedUpdates
-    }));
-  }, [getPlayerByName, validateRosterUpdate]);
-
-  // Mark game winner and save
-  const markWinner = useCallback(async (winningTeam) => {
-    if (!session) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Save game record
-      const gameData = {
-        live_session_id: session.id,
-        game_number: gameNumber,
-        team_a_players: players.teamA.map(p => p.name),
-        team_b_players: players.teamB.map(p => p.name),
-        sitting_out_players: players.sittingOut.map(p => p.name),
-        winning_team: winningTeam
-      };
-
-      const { data: savedGame, error: gameError } = await supabase
-        .from('games')
-        .insert(gameData)
-        .select()
-        .single();
-
-      if (gameError) throw gameError;
-
-      // Update player stats using batch operations
-      const winningPlayers = winningTeam === 'team_a' ? players.teamA : players.teamB;
-      const losingPlayers = winningTeam === 'team_a' ? players.teamB : players.teamA;
-
-      // Prepare all updates in a single batch
-      const allUpdates = [];
-
-      // Prepare winner updates
-      for (const player of winningPlayers) {
-        allUpdates.push({
-          live_session_id: session.id,
-          player_name: player.name,
-          total_games_played: player.gamesPlayed + 1,
-          total_games_won: player.gamesWon + 1
-        });
-      }
-
-      // Prepare loser updates
-      for (const player of losingPlayers) {
-        allUpdates.push({
-          live_session_id: session.id,
-          player_name: player.name,
-          total_games_played: player.gamesPlayed + 1,
-          total_games_won: player.gamesWon
-        });
-      }
-
-      // Execute all updates as batch using upsert
-      const { error: updateError } = await supabase
-        .from('live_session_players')
-        .upsert(allUpdates, {
-          onConflict: 'live_session_id,player_name'
-        });
-
-      if (updateError) {
-        console.error('Failed to update player stats:', updateError);
-        throw updateError;
-      }
-
-      // Update local state optimistically - MUST update allSessionPlayers too!
-      const updatedTeamA = players.teamA.map(p => ({
-        ...p,
-        gamesPlayed: p.gamesPlayed + 1,
-        gamesWon: p.gamesWon + (winningTeam === 'team_a' ? 1 : 0)
-      }));
-
-      const updatedTeamB = players.teamB.map(p => ({
-        ...p,
-        gamesPlayed: p.gamesPlayed + 1,
-        gamesWon: p.gamesWon + (winningTeam === 'team_b' ? 1 : 0)
-      }));
-
-      setPlayers(prev => ({
-        ...prev,
-        teamA: updatedTeamA,
-        teamB: updatedTeamB
-      }));
-
-      // Update master list with new stats
-      setAllSessionPlayers(prev => prev.map(p => {
-        const updatedInTeamA = updatedTeamA.find(t => t.name === p.name);
-        if (updatedInTeamA) return updatedInTeamA;
-
-        const updatedInTeamB = updatedTeamB.find(t => t.name === p.name);
-        if (updatedInTeamB) return updatedInTeamB;
-
-        return p;
-      }));
-
-      setGames(prev => [...prev, savedGame || gameData]);
-      setGameNumber(prev => prev + 1);
-
-      return { winningTeam, losingTeam: winningTeam === 'team_a' ? 'team_b' : 'team_a' };
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [session, gameNumber, players]);
-
-  // Undo last game
-  const undoLastGame = useCallback(async () => {
-    if (!session || games.length === 0) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const lastGame = games[games.length - 1];
-
-      // Delete game record
-      const { error: deleteError } = await supabase
-        .from('games')
-        .delete()
-        .eq('live_session_id', session.id)
-        .eq('game_number', lastGame.game_number);
-
-      if (deleteError) throw deleteError;
-
-      // Revert stats for everyone who was on the floor for that game
-      const winningNames = lastGame.winning_team === 'team_a'
-        ? lastGame.team_a_players
-        : lastGame.team_b_players;
-      const playedNames = new Set([...lastGame.team_a_players, ...lastGame.team_b_players]);
-
-      const revertedPlayers = allSessionPlayers.map(p => {
-        if (!playedNames.has(p.name)) return p;
-        return {
-          ...p,
-          gamesPlayed: Math.max(0, p.gamesPlayed - 1),
-          gamesWon: Math.max(0, p.gamesWon - (winningNames.includes(p.name) ? 1 : 0))
-        };
-      });
-
-      const statUpdates = revertedPlayers
-        .filter(p => playedNames.has(p.name))
-        .map(p => ({
-          live_session_id: session.id,
-          player_name: p.name,
-          total_games_played: p.gamesPlayed,
-          total_games_won: p.gamesWon
-        }));
-
-      if (statUpdates.length > 0) {
-        const { error: updateError } = await supabase
-          .from('live_session_players')
-          .upsert(statUpdates, { onConflict: 'live_session_id,player_name' });
-
-        if (updateError) throw updateError;
-      }
-
-      // Update local state so the screen matches the database
-      const byName = new Map(revertedPlayers.map(p => [p.name, p]));
-      setAllSessionPlayers(revertedPlayers);
-      setGames(prev => prev.slice(0, -1));
-      setGameNumber(prev => Math.max(1, prev - 1));
-
-      // Put the teams back the way they were for the undone game so it can be re-recorded
-      setPlayers({
-        teamA: lastGame.team_a_players.map(name => byName.get(name)).filter(Boolean),
-        teamB: lastGame.team_b_players.map(name => byName.get(name)).filter(Boolean),
-        sittingOut: revertedPlayers.filter(p => !playedNames.has(p.name))
-      });
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [session, games, allSessionPlayers]);
-
-  // End session and convert to legacy format
-  const endSession = useCallback(async () => {
-    if (!session) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Mark session as completed
-      const { error: updateError } = await supabase
-        .from('live_sessions')
-        .update({
-          status: 'completed',
-          ended_at: new Date().toISOString()
-        })
-        .eq('id', session.id);
-
-      if (updateError) throw updateError;
-
-      // Fetch final player stats
-      const { data: finalPlayers, error: playersError } = await supabase
-        .from('live_session_players')
-        .select('*')
-        .eq('live_session_id', session.id);
-
-      if (playersError) throw playersError;
-
-      // Convert to legacy sessions format with validation
-      const aggregatedSession = {
-        live_session_id: session.id, // Add unique ID for this session
-        date: session.date,
-        location: session.location || null,
-        players: finalPlayers.map(p => ({
-          name: p.player_name,
-          gamesPlayed: p.total_games_played,
-          gamesWon: p.total_games_won,
-          notes: p.notes || ''
-        }))
-      };
-
-      // Validate required fields
-      if (!aggregatedSession.date) {
-        throw new Error('Session date is required for saving');
-      }
-
-      if (!aggregatedSession.players || aggregatedSession.players.length === 0) {
-        throw new Error('Session must have at least one player');
-      }
-
-      const { error: sessionInsertError } = await supabase
-        .from('sessions')
-        .insert(aggregatedSession);
-
-      if (sessionInsertError) {
-        console.error('Failed to save session:', sessionInsertError);
-        throw new Error(`Failed to save session: ${sessionInsertError.message}`);
-      }
-
-      // Clear localStorage backup
-      localStorage.removeItem('liveSessionBackup');
-
-      // Clear state
-      setSession(null);
-      setGames([]);
-      setPlayers({ teamA: [], teamB: [], sittingOut: [] });
-      setGameNumber(1);
-
-      return aggregatedSession;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [session]);
-
-  // Abandon session without saving
-  const abandonSession = useCallback(async () => {
-    if (!session) return;
-
-    try {
-      await supabase
-        .from('live_sessions')
-        .update({ status: 'abandoned' })
-        .eq('id', session.id);
-
-      localStorage.removeItem('liveSessionBackup');
-      setSession(null);
-      setGames([]);
-      setPlayers({ teamA: [], teamB: [], sittingOut: [] });
-      setGameNumber(1);
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
-  }, [session]);
-
-  // Add a new player during an active session
-  const addPlayer = useCallback(async (playerName) => {
-    if (!session) return;
-
-    try {
-      // Make sure the player exists in the players table. Standings are built
-      // from that table, so a name that only lives in the live session would
-      // have games recorded but never show up.
-      const { data: existing, error: lookupError } = await supabase
-        .from('players')
-        .select('name')
-        .eq('name', playerName)
-        .maybeSingle();
-
-      if (lookupError) throw lookupError;
-
-      if (!existing) {
-        const { error: createError } = await supabase
-          .from('players')
-          .insert({ name: playerName });
-
-        if (createError) throw createError;
-      }
-
-      // Add player to this session
-      const { error: insertError } = await supabase
-        .from('live_session_players')
-        .insert({
-          live_session_id: session.id,
-          player_name: playerName,
-          total_games_played: 0,
-          total_games_won: 0
-        });
-
-      if (insertError) throw insertError;
-
-      const newPlayer = { name: playerName, gamesPlayed: 0, gamesWon: 0 };
-
-      // Add player to master list
-      setAllSessionPlayers(prev => [...prev, newPlayer]);
-
-      // Add player to local state (on the bench)
-      setPlayers(prev => ({
-        ...prev,
-        sittingOut: [...prev.sittingOut, newPlayer]
-      }));
-
-      return { success: true };
-    } catch (error) {
-      console.error('Error adding player:', error);
-      throw error;
-    }
-  }, [session]);
-
-  const value = {
-    session,
-    games,
-    players,
-    allSessionPlayers,
-    gameNumber,
-    isLoading,
-    error,
-    getWinStreak,
-    actions: {
-      startSession,
-      resumeSession,
-      updateRoster,
-      markWinner,
-      undoLastGame,
-      endSession,
-      abandonSession,
-      addPlayer
+      setBusy(false);
     }
   };
 
-  return (
-    <LiveSessionContext.Provider value={value}>
-      {children}
-    </LiveSessionContext.Provider>
+  const startSession = useCallback(
+    (date, location, names) =>
+      run(setIsLoading, async () => {
+        const created = await liveSessionStore.createSession({ date, location, names });
+        setSession(created);
+        setRoster([...names]);
+        setGames([]);
+        setLineup({ teamA: [], teamB: [], bench: [...names] });
+        return created;
+      }),
+    []
   );
-};
 
-export default LiveSessionContext;
+  const resumeSession = useCallback(
+    (id) =>
+      run(setIsLoading, async () => {
+        const loaded = await liveSessionStore.loadSession(id);
+        setSession(loaded.session);
+        setRoster(loaded.roster);
+        setGames(loaded.games);
+        setLineup(lineupFromGames(loaded.games, loaded.roster));
+        return loaded.session;
+      }),
+    []
+  );
+
+  /** Replace the lineup. Returns the problem string if it is not usable. */
+  const updateLineup = useCallback(
+    (next) => {
+      const problem = lineupProblem(next, roster);
+      if (problem) return problem;
+      setLineup({ teamA: [...next.teamA], teamB: [...next.teamB], bench: [...next.bench] });
+      return null;
+    },
+    [roster]
+  );
+
+  const recordWinner = useCallback(
+    (team) =>
+      run(setIsSaving, async () => {
+        if (!session) throw new Error('No session');
+        if (lineup.teamA.length === 0 || lineup.teamB.length === 0) throw new Error('Pick both teams first');
+        const row = await liveSessionStore.insertGame({
+          live_session_id: session.id,
+          game_number: games.length + 1,
+          team_a_players: lineup.teamA,
+          team_b_players: lineup.teamB,
+          sitting_out_players: lineup.bench,
+          winning_team: team
+        });
+        setGames((current) => [...current, row]);
+        return row;
+      }),
+    [session, games.length, lineup]
+  );
+
+  const undoLastGame = useCallback(
+    () =>
+      run(setIsSaving, async () => {
+        const last = games[games.length - 1];
+        if (!session || !last) return null;
+        await liveSessionStore.deleteGame(session.id, last.id);
+        setGames((current) => current.slice(0, -1));
+        // Put the teams back the way they were for the undone game
+        setLineup(lineupFromGames([last], roster));
+        return last;
+      }),
+    [session, games, roster]
+  );
+
+  const addPlayer = useCallback(
+    (name) =>
+      run(setIsSaving, async () => {
+        if (!session) throw new Error('No session');
+        await liveSessionStore.addRosterPlayer(session.id, name);
+        setRoster((current) => [...current, name]);
+        setLineup((current) => ({ ...current, bench: [...current.bench, name] }));
+      }),
+    [session]
+  );
+
+  const endSession = useCallback(
+    () =>
+      run(setIsSaving, async () => {
+        if (!session) throw new Error('No session');
+        const aggregated = {
+          live_session_id: session.id,
+          date: session.date,
+          location: session.location || null,
+          players: deriveSessionStats(games, roster).map((p) => ({
+            name: p.name,
+            gamesPlayed: p.gamesPlayed,
+            gamesWon: p.gamesWon,
+            notes: ''
+          }))
+        };
+        await liveSessionStore.completeSession(session, aggregated);
+        setSession(null);
+        setRoster([]);
+        setGames([]);
+        setLineup({ teamA: [], teamB: [], bench: [] });
+        return aggregated;
+      }),
+    [session, games, roster]
+  );
+
+  const value = {
+    session,
+    roster,
+    games,
+    lineup,
+    teams,
+    allPlayers,
+    gameNumber,
+    isLoading,
+    isSaving,
+    error,
+    actions: { startSession, resumeSession, updateLineup, recordWinner, undoLastGame, addPlayer, endSession }
+  };
+
+  return <LiveSessionContext.Provider value={value}>{children}</LiveSessionContext.Provider>;
+};

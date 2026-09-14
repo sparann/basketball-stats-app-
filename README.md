@@ -13,8 +13,12 @@ games as they happen. Built for phones. Live at https://sparan.vercel.app.
   full history.
 - **Sessions.** Every night played, with the MVP for each.
 - **Admin.** Password-gated. Add or edit sessions by hand, manage players and
-  courts, and run a **live session**: pick teams, tap the winner after each
-  game, rotate the bench, end the night and it saves to the standings.
+  courts, and run a **live session**: pick Light and Dark, tap the winner
+  after each game, rotate the bench, end the night and it saves to the
+  standings. Every stat is derived from the game rows, so recording a game is
+  one write and undo is one delete.
+- **Live.** `/live` shows tonight's records and results to whoever is on the
+  bench. A LIVE badge appears on Standings while a session is running.
 
 ## Stack
 
@@ -27,8 +31,12 @@ No server code. Deployed on Vercel from `main`.
 npm install
 npm run dev        # http://localhost:5173
 npm run lint
+npm test           # vitest, pure functions in src/utils
 npm run build
 ```
+
+Without Supabase, live sessions are kept in the browser's localStorage so the
+courtside screens can be exercised end to end.
 
 Create `.env.local` (git-ignored). Either point at Supabase:
 
@@ -63,7 +71,8 @@ Supabase tables, all with public read/write policies for the anon key
 Photos live in the `basketball-stats` storage bucket under `player-photos/`.
 
 Schema lives in `supabase/migrations/`. For a fresh project, run them in
-order in the Supabase SQL editor.
+order in the Supabase SQL editor. `20260914_enable_realtime.sql` is optional:
+it lets `/live` update instantly instead of every 20 seconds.
 
 ## Deploying
 
@@ -78,21 +87,18 @@ work.
 src/
   App.jsx                 gate, providers, routes, tab bar
   context/                DataProvider (players, sessions, admin), UIProvider (toast, confirm)
-  pages/                  Standings, Player, Sessions, Session, Admin
+  pages/                  Standings, Player, Sessions, Session, Admin, LiveSession (/admin/live), Live (/live)
   components/ui/          Icon, Avatar, Sparkline, Sheet, Button, PageHeader, TabBar
   components/             admin panel, modals, captcha gate
-  components/LiveSession/ courtside mode
-  lib/                    supabase client, photo resize, rename helper
+  components/LiveSession/ courtside: context, court screen, team setup, rotation, sheets
+  lib/                    supabase client, live session store (Supabase or local), photo resize, rename helper
   utils/                  win-rate math, standings groups, dates, names
   data/                   sample fixture for local development
 ```
 
 ## Roadmap
 
-- Courtside redesign: Light and Dark teams, winner buttons in the thumb zone,
-  one-screen rotation.
-- Stats derived from `games` instead of stored counters.
 - Player ids instead of names as the join key.
 - Courts stored in Supabase instead of the browser.
 - Supabase Auth for admins, write policies scoped to signed-in users.
-- Live standings for people on the bench.
+- Offline queue for courtside writes when the gym has no signal.
