@@ -261,3 +261,13 @@ export const getSessionTopPerformers = (session) => {
   const best = Math.max(...eligible.map((p) => p.winPercentage));
   return eligible.filter((p) => p.winPercentage === best);
 };
+
+/**
+ * Three bands for colouring a session's win rate: hot (70%+), good (.500 or
+ * better), cold (a losing day). Intensity of one hue, so it reads in both themes.
+ */
+export const winBand = (percentage) => {
+  if (percentage >= 0.7) return 'hot';
+  if (percentage >= 0.5) return 'good';
+  return 'cold';
+};

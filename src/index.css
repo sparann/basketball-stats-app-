@@ -3,8 +3,42 @@
 @tailwind utilities;
 
 @layer base {
+  /* Scoreboard, dark. The default and the design's home. RGB triplets so Tailwind can add opacity. */
   :root {
     color-scheme: dark;
+    --court: 27 23 20;
+    --surface: 38 33 28;
+    --surface-2: 50 43 37;
+    --surface-raised: 46 37 32;
+    --line: 46 40 35;
+    --line-strong: 74 65 57;
+    --ink: 244 239 232;
+    --ink-2: 168 159 148;
+    --ink-3: 111 102 94;
+    --accent: 240 138 62;
+    --accent-soft: 58 42 30;
+    --accent-ink: 27 23 20;
+    --danger: 234 122 99;
+    --danger-soft: 61 36 31;
+  }
+
+  /* Light: warm off-white ground, same accent hue pulled darker for contrast. */
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --court: 250 247 242;
+    --surface: 255 255 255;
+    --surface-2: 241 236 228;
+    --surface-raised: 235 228 218;
+    --line: 230 223 213;
+    --line-strong: 207 198 185;
+    --ink: 27 23 20;
+    --ink-2: 111 102 94;
+    --ink-3: 154 145 135;
+    --accent: 201 99 31;
+    --accent-soft: 251 233 220;
+    --accent-ink: 255 255 255;
+    --danger: 183 66 46;
+    --danger-soft: 248 225 220;
   }
 
   html {

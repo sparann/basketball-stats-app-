@@ -1,6 +1,11 @@
+import { winBand } from '../../utils/calculations';
+
+const BAR = { hot: 'bg-accent', good: 'bg-accent/45', cold: 'bg-line-strong' };
+
 /**
- * Tiny bar sparkline for the last N values in 0..1.
- * The most recent bar takes the accent so the eye lands on "how did it go last time".
+ * Tiny bar sparkline for the last N session win rates in 0..1.
+ * Colour intensity carries the meaning: strong for 70%+, faded for .500 or
+ * better, grey for a losing day.
  */
 const Sparkline = ({ values = [], slots = 5, height = 10, barWidth = 4, gap = 2 }) => {
   const recent = values.slice(-slots);
@@ -12,15 +17,8 @@ const Sparkline = ({ values = [], slots = 5, height = 10, barWidth = 4, gap = 2 
         <div key={`pad-${i}`} style={{ width: barWidth, height: 2 }} className="rounded-[1px] bg-line" />
       ))}
       {recent.map((v, i) => {
-        const isLast = i === recent.length - 1;
         const h = Math.max(2, Math.round(Math.min(1, Math.max(0, v)) * height));
-        return (
-          <div
-            key={i}
-            style={{ width: barWidth, height: h }}
-            className={`rounded-[1px] ${isLast ? 'bg-accent' : 'bg-ink-3'}`}
-          />
-        );
+        return <div key={i} style={{ width: barWidth, height: h }} className={`rounded-[1px] ${BAR[winBand(v)]}`} />;
       })}
     </div>
   );

@@ -1,4 +1,9 @@
 /** @type {import('tailwindcss').Config} */
+
+// Theme tokens live as RGB triplets in src/index.css (:root = dark, [data-theme="light"] = light).
+// This form keeps opacity modifiers like bg-court/95 working.
+const token = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+
 export default {
   content: [
     "./index.html",
@@ -6,31 +11,38 @@ export default {
   ],
   theme: {
     extend: {
-      // "Scoreboard" palette: dark warm ground, one accent.
       colors: {
-        court: '#1b1714',            // page background
+        court: token('court'),                 // page background
         surface: {
-          DEFAULT: '#26211c',        // cards, sheets, buttons at rest
-          2: '#322b25',              // avatars, inset fills
-          raised: '#2e2520',         // selected / pressed rows
+          DEFAULT: token('surface'),           // cards, sheets, buttons at rest
+          2: token('surface-2'),               // avatars, inset fills
+          raised: token('surface-raised'),     // selected / pressed rows
         },
         line: {
-          DEFAULT: '#2e2823',        // hairlines between rows
-          strong: '#4a4139',         // pill and chip borders
+          DEFAULT: token('line'),              // hairlines between rows
+          strong: token('line-strong'),        // pill and chip borders
         },
         ink: {
-          DEFAULT: '#f4efe8',        // primary text, Light team
-          2: '#a89f94',              // secondary text
-          3: '#6f665e',              // tertiary text, disabled
+          DEFAULT: token('ink'),               // primary text
+          2: token('ink-2'),                   // secondary text
+          3: token('ink-3'),                   // tertiary text, disabled
         },
         accent: {
-          DEFAULT: '#f08a3e',        // rank, current game, primary action
-          soft: '#3a2a1e',           // accent tint fill
-          ink: '#1b1714',            // text on accent
+          DEFAULT: token('accent'),            // rank, current game, primary action
+          soft: token('accent-soft'),          // accent tint fill
+          ink: token('accent-ink'),            // text on accent
         },
         danger: {
-          DEFAULT: '#ea7a63',
-          soft: '#3d241f',
+          DEFAULT: token('danger'),
+          soft: token('danger-soft'),
+        },
+        // Shirt colours do not follow the theme: Light is always light, Dark always dark.
+        shirt: {
+          light: '#f4efe8',
+          'light-ink': '#1b1714',
+          dark: '#1b1714',
+          'dark-ink': '#f4efe8',
+          'dark-line': '#4a4139',
         },
       },
       fontFamily: {

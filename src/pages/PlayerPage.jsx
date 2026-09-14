@@ -9,6 +9,7 @@ import Avatar from '../components/ui/Avatar';
 import Icon from '../components/ui/Icon';
 import Sheet from '../components/ui/Sheet';
 import Button from '../components/ui/Button';
+import WinBars from '../components/ui/WinBars';
 
 const MIN_GAMES_TOGETHER = 5;
 const MIN_GAMES_AT_COURT = 5;
@@ -252,19 +253,8 @@ const PlayerPage = () => {
       {recent.length > 0 && (
         <div className="px-5 pt-6">
           <SectionLabel right="Win rate per session">Last {recent.length} sessions</SectionLabel>
-          <div className="h-[72px] flex items-end gap-1.5 border-b border-line">
-            {recent.map((s, i) => {
-              const isLast = i === recent.length - 1;
-              const height = Math.max(4, Math.round(s.winPercentage * 72));
-              return (
-                <div
-                  key={s.date + i}
-                  title={`${formatDate(s.date)}: ${formatWinPercentage(s.winPercentage, s.gamesPlayed)}`}
-                  style={{ height }}
-                  className={`flex-1 rounded-t-[3px] ${isLast ? 'bg-accent' : 'bg-line-strong'}`}
-                />
-              );
-            })}
+          <div className="border-b border-line pb-0">
+            <WinBars sessions={recent} slots={recent.length} height={72} gap={5} />
           </div>
           <div className="flex items-center justify-between mt-1.5 text-[11px] tabular">
             <span className="text-ink-3">{formatDate(recent[0].date)}</span>

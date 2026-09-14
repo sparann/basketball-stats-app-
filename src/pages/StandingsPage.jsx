@@ -13,6 +13,7 @@ import { shortName } from '../utils/names';
 import PageHeader from '../components/ui/PageHeader';
 import Avatar from '../components/ui/Avatar';
 import Sparkline from '../components/ui/Sparkline';
+import WinBars from '../components/ui/WinBars';
 import Sheet from '../components/ui/Sheet';
 import Icon from '../components/ui/Icon';
 import { useActiveLiveSession } from '../components/LiveSession/useActiveLiveSession';
@@ -119,22 +120,8 @@ const StandingCard = ({ player, rank }) => {
         </div>
       </div>
 
-      <div className="flex items-end gap-1.5 h-7 mt-4" aria-hidden="true">
-        {Array.from({ length: Math.max(0, 5 - recent.length) }).map((_, i) => (
-          <div key={`pad-${i}`} className="flex-1 h-[3px] rounded-[2px] bg-line" />
-        ))}
-        {recent.map((s, i) => {
-          const last = i === recent.length - 1;
-          const height = Math.max(3, Math.round(s.winPercentage * 28));
-          return (
-            <div
-              key={s.date + i}
-              style={{ height }}
-              title={`${formatDate(s.date)}: ${formatWinPercentage(s.winPercentage, s.gamesPlayed)}`}
-              className={`flex-1 rounded-[2px] ${last ? 'bg-accent' : 'bg-line-strong'}`}
-            />
-          );
-        })}
+      <div className="mt-4">
+        <WinBars sessions={recent} slots={5} height={28} />
       </div>
     </Link>
   );

@@ -14,6 +14,8 @@ const PATHS = {
   list: 'M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01',
   rows: 'M4 6h16M4 12h16M4 18h16',
   grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+  sun: 'M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',
   calendar: 'M3 10h18M8 3v4M16 3v4',
   lock: 'M8 11V7a4 4 0 0 1 8 0v4',
   search: 'M21 21l-4.3-4.3',
@@ -42,6 +44,7 @@ const EXTRAS = {
   calendar: <rect x="3" y="5" width="18" height="16" rx="2" />,
   lock: <rect x="4" y="11" width="16" height="10" rx="2" />,
   search: <circle cx="11" cy="11" r="6.5" />,
+  sun: <circle cx="12" cy="12" r="4" />,
   camera: <circle cx="12" cy="13" r="3" />,
 };
 

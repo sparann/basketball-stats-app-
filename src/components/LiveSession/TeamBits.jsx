@@ -4,7 +4,9 @@ import { TEAM_LABELS } from '../../utils/liveStats';
 /** LIGHT is a white pill, DARK a charcoal one: tells apart at arm's length in a gym. */
 export const TeamPill = ({ team, size = 'sm' }) => {
   const dims = size === 'lg' ? 'h-[30px] px-3 text-base' : 'h-[26px] px-2.5 text-sm';
-  const look = team === 'team_a' ? 'bg-ink text-court' : 'bg-court text-ink border border-line-strong';
+  const look = team === 'team_a'
+    ? 'bg-shirt-light text-shirt-light-ink border border-line-strong'
+    : 'bg-shirt-dark text-shirt-dark-ink border border-shirt-dark-line';
   return (
     <span className={`inline-flex items-center rounded-full font-display font-extrabold tracking-[0.06em] ${dims} ${look}`}>
       {TEAM_LABELS[team].toUpperCase()}
@@ -20,14 +22,14 @@ export const WinnerButton = ({ team, onClick, disabled }) => {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`h-[88px] rounded-2xl flex flex-col items-center justify-center gap-0.5 transition-transform active:scale-[0.98] disabled:opacity-50 ${
-        light ? 'bg-ink text-court' : 'bg-surface text-ink border-[1.5px] border-line-strong'
+      className={`h-[88px] rounded-2xl flex flex-col items-center justify-center gap-0.5 border-[1.5px] transition-transform active:scale-[0.98] disabled:opacity-50 ${
+        light ? 'bg-shirt-light text-shirt-light-ink border-line-strong' : 'bg-shirt-dark text-shirt-dark-ink border-shirt-dark-line'
       }`}
     >
       <span className="font-display font-extrabold text-[26px] leading-none tracking-[0.04em]">
         {TEAM_LABELS[team].toUpperCase()}
       </span>
-      <span className={`text-xs font-semibold tracking-[0.1em] ${light ? 'text-ink-3' : 'text-ink-2'}`}>WON</span>
+      <span className={`text-xs font-semibold tracking-[0.1em] ${light ? 'text-shirt-light-ink/60' : 'text-shirt-dark-ink/70'}`}>WON</span>
     </button>
   );
 };
@@ -35,8 +37,8 @@ export const WinnerButton = ({ team, onClick, disabled }) => {
 const TONES = {
   neutral: 'bg-court text-ink',
   surface: 'bg-surface text-ink',
-  light: 'bg-ink text-court',
-  dark: 'bg-court text-ink border-[1.5px] border-ink',
+  light: 'bg-shirt-light text-shirt-light-ink border-[1.5px] border-line-strong',
+  dark: 'bg-shirt-dark text-shirt-dark-ink border-[1.5px] border-shirt-dark-line',
   selected: 'bg-surface-raised text-ink border-[1.5px] border-accent'
 };
 
