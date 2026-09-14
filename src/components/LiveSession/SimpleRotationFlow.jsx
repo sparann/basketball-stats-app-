@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLiveSession } from './LiveSessionContext';
+import { useUI } from '../../context/ui-context';
 
 const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) => {
   const { players, gameNumber, actions, allSessionPlayers } = useLiveSession();
+  const { toast } = useUI();
   const [selectedPlayers, setSelectedPlayers] = useState(new Set());
 
   const winningTeamKey = winningTeam === 'team_a' ? 'teamA' : 'teamB';
@@ -10,9 +12,10 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
   const winningTeamPlayers = players[winningTeamKey] || [];
   const losingTeamPlayers = players[losingTeamKey] || [];
 
-  const [newTeamA, setNewTeamA] = useState([]);
-  const [newTeamB, setNewTeamB] = useState([]);
-  const [benchPlayers, setBenchPlayers] = useState([]);
+  // Start from the rosters on the floor. This flow mounts fresh after every game.
+  const [newTeamA, setNewTeamA] = useState(() => players.teamA || []);
+  const [newTeamB, setNewTeamB] = useState(() => players.teamB || []);
+  const [benchPlayers, setBenchPlayers] = useState(() => players.sittingOut || []);
 
   // Helper: Parse name and detect duplicates
   const getDisplayName = useMemo(() => {
@@ -41,13 +44,6 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
       document.body.style.overflow = '';
     };
   }, []);
-
-  // Initialize assignment state - start with current rosters
-  useEffect(() => {
-    setNewTeamA(players.teamA || []);
-    setNewTeamB(players.teamB || []);
-    setBenchPlayers(players.sittingOut || []);
-  }, [players]);
 
   // Multi-select toggle
   const handleTogglePlayer = (player) => {
@@ -114,12 +110,12 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
 
   const handleConfirm = () => {
     if (newTeamA.length !== newTeamB.length) {
-      alert(`Teams must be equal size!\nTeam A: ${newTeamA.length}\nTeam B: ${newTeamB.length}`);
+      toast(`Teams must match: ${newTeamA.length} v ${newTeamB.length}`, { type: 'error' });
       return;
     }
 
     if (newTeamA.length === 0) {
-      alert('Teams cannot be empty!');
+      toast('Both teams need players', { type: 'error' });
       return;
     }
 
@@ -132,38 +128,14 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
     onComplete();
   };
 
-  const teamColors = {
-    team_a: {
-      gradient: 'from-blue-600 to-indigo-600',
-      bg: 'bg-blue-600',
-      hover: 'hover:bg-blue-700',
-      text: 'text-blue-600',
-      border: 'border-blue-600',
-      light: 'bg-blue-50',
-      lightBorder: 'border-blue-200'
-    },
-    team_b: {
-      gradient: 'from-red-600 to-rose-600',
-      bg: 'bg-red-600',
-      hover: 'hover:bg-red-700',
-      text: 'text-red-600',
-      border: 'border-red-600',
-      light: 'bg-red-50',
-      lightBorder: 'border-red-200'
-    }
-  };
-
-  const winningColors = teamColors[winningTeam];
-  const losingColors = teamColors[losingTeam];
-
   if (!winningTeamPlayers || !losingTeamPlayers) {
     return (
-      <div className="fixed inset-0 bg-slate-100 flex items-center justify-center z-50 p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm">
-          <p className="text-red-600 font-bold text-lg mb-4">Error: Team data not available</p>
+      <div className="fixed inset-0 bg-court flex items-center justify-center z-50 p-4">
+        <div className="bg-surface p-8 rounded-2xl shadow-xl max-w-sm">
+          <p className="text-red-400 font-bold text-lg mb-4">Error: Team data not available</p>
           <button
             onClick={onCancel}
-            className="w-full px-4 py-3 bg-slate-600 text-white rounded-xl font-semibold hover:bg-slate-700 transition-colors"
+            className="w-full px-4 py-3 bg-surface-2 text-ink-2 rounded-xl font-semibold hover:bg-line-strong transition-colors"
           >
             Close
           </button>
@@ -173,15 +145,15 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-100 overflow-y-auto z-50">
+    <div className="fixed inset-0 bg-court overflow-y-auto z-50">
       <div className="max-w-2xl mx-auto min-h-screen flex flex-col">
         <div className="flex-1 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-surface rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Click-to-Select Assignment */}
-                <div className="relative p-4 border-b border-slate-200 bg-gradient-to-r from-slate-700 to-slate-800">
+                <div className="relative p-4 border-b border-line bg-surface-2">
                   <button
                     onClick={onCancel}
-                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-white hover:bg-white/20 rounded-lg transition-colors"
+                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-white hover:bg-ink/10 rounded-lg transition-colors"
                   >
                     ✕
                   </button>
@@ -198,15 +170,15 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
                   <div
                     className={`w-full rounded-xl border-2 transition-all overflow-hidden ${
                       selectedPlayers.size > 0
-                        ? 'bg-blue-50 hover:bg-blue-100 border-blue-400 shadow-lg'
-                        : 'bg-blue-50 border-blue-200 opacity-60'
+                        ? 'bg-blue-950/50 hover:bg-blue-900/50 border-blue-500 shadow-lg'
+                        : 'bg-blue-950/30 border-blue-900 opacity-70'
                     }`}
                   >
                     <button
                       onClick={handleMoveToTeamA}
                       disabled={selectedPlayers.size === 0}
                       className={`w-full p-3 font-bold text-base transition-colors ${
-                        selectedPlayers.size > 0 ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer' : 'bg-blue-300 text-blue-100 cursor-not-allowed'
+                        selectedPlayers.size > 0 ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer' : 'bg-blue-900/40 text-blue-200/60 cursor-not-allowed'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -224,7 +196,7 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
                       className={`flex flex-wrap gap-2 min-h-[50px] p-2 ${selectedPlayers.size > 0 ? 'cursor-pointer' : ''}`}
                     >
                       {newTeamA.length === 0 ? (
-                        <p className="text-blue-400 text-sm italic w-full text-center py-2">Empty</p>
+                        <p className="text-blue-400/60 text-sm italic w-full text-center py-2">Empty</p>
                       ) : (
                         newTeamA.map((player) => (
                           <button
@@ -235,7 +207,7 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
                             }}
                             className={`px-3 py-2 rounded-full font-bold text-sm transition-all ${
                               selectedPlayers.has(player.name)
-                                ? 'bg-green-500 text-white ring-2 ring-green-400 shadow-lg'
+                                ? 'bg-accent-soft0 text-white ring-2 ring-green-400 shadow-lg'
                                 : 'bg-blue-600 text-white hover:bg-blue-700'
                             }`}
                           >
@@ -250,15 +222,15 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
                   <div
                     className={`w-full rounded-xl border-2 transition-all overflow-hidden ${
                       selectedPlayers.size > 0
-                        ? 'bg-slate-50 hover:bg-slate-100 border-slate-400 shadow-lg'
-                        : 'bg-slate-50 border-slate-200 opacity-60'
+                        ? 'bg-surface-2 hover:bg-surface-2 border-line-strong shadow-lg'
+                        : 'bg-surface-2 border-line opacity-60'
                     }`}
                   >
                     <button
                       onClick={handleMoveToBench}
                       disabled={selectedPlayers.size === 0}
                       className={`w-full p-3 font-bold text-base transition-colors ${
-                        selectedPlayers.size > 0 ? 'bg-slate-600 hover:bg-slate-700 text-white cursor-pointer' : 'bg-slate-300 text-slate-100 cursor-not-allowed'
+                        selectedPlayers.size > 0 ? 'bg-line-strong hover:bg-line-strong text-white cursor-pointer' : 'bg-line-strong text-ink cursor-not-allowed'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -274,7 +246,7 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
                       className={`flex flex-wrap gap-2 min-h-[50px] p-2 ${selectedPlayers.size > 0 ? 'cursor-pointer' : ''}`}
                     >
                       {benchPlayers.length === 0 ? (
-                        <p className="text-slate-400 text-sm italic w-full text-center py-2">Empty</p>
+                        <p className="text-ink-3 text-sm italic w-full text-center py-2">Empty</p>
                       ) : (
                         benchPlayers.map((player) => (
                           <button
@@ -285,8 +257,8 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
                             }}
                             className={`px-3 py-2 rounded-full font-bold text-sm transition-all ${
                               selectedPlayers.has(player.name)
-                                ? 'bg-green-500 text-white ring-2 ring-green-400 shadow-lg'
-                                : 'bg-slate-600 text-white hover:bg-slate-700'
+                                ? 'bg-accent-soft0 text-white ring-2 ring-green-400 shadow-lg'
+                                : 'bg-surface-2 text-ink-2 hover:bg-line-strong'
                             }`}
                           >
                             {getDisplayName(player.name, allSessionPlayers)}
@@ -300,15 +272,15 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
                   <div
                     className={`w-full rounded-xl border-2 transition-all overflow-hidden ${
                       selectedPlayers.size > 0
-                        ? 'bg-red-50 hover:bg-red-100 border-red-400 shadow-lg'
-                        : 'bg-red-50 border-red-200 opacity-60'
+                        ? 'bg-red-950/50 hover:bg-red-900/50 border-red-500 shadow-lg'
+                        : 'bg-red-950/30 border-red-900 opacity-70'
                     }`}
                   >
                     <button
                       onClick={handleMoveToTeamB}
                       disabled={selectedPlayers.size === 0}
                       className={`w-full p-3 font-bold text-base transition-colors ${
-                        selectedPlayers.size > 0 ? 'bg-red-600 hover:bg-red-700 text-white cursor-pointer' : 'bg-red-300 text-red-100 cursor-not-allowed'
+                        selectedPlayers.size > 0 ? 'bg-red-600 hover:bg-red-700 text-white cursor-pointer' : 'bg-red-900/40 text-red-200/60 cursor-not-allowed'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -326,7 +298,7 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
                       className={`flex flex-wrap gap-2 min-h-[50px] p-2 ${selectedPlayers.size > 0 ? 'cursor-pointer' : ''}`}
                     >
                       {newTeamB.length === 0 ? (
-                        <p className="text-red-400 text-sm italic w-full text-center py-2">Empty</p>
+                        <p className="text-red-400/60 text-sm italic w-full text-center py-2">Empty</p>
                       ) : (
                         newTeamB.map((player) => (
                           <button
@@ -337,7 +309,7 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
                             }}
                             className={`px-3 py-2 rounded-full font-bold text-sm transition-all ${
                               selectedPlayers.has(player.name)
-                                ? 'bg-green-500 text-white ring-2 ring-green-400 shadow-lg'
+                                ? 'bg-accent-soft0 text-white ring-2 ring-green-400 shadow-lg'
                                 : 'bg-red-600 text-white hover:bg-red-700'
                             }`}
                           >
@@ -350,24 +322,24 @@ const SimpleRotationFlow = ({ winningTeam, losingTeam, onComplete, onCancel }) =
 
                   {/* Validation Message */}
                   {newTeamA.length !== newTeamB.length && (
-                    <div className="px-3 py-2 bg-amber-50 border border-amber-300 rounded-lg">
-                      <p className="text-amber-800 font-semibold text-center text-xs">
+                    <div className="px-3 py-2 bg-accent-soft border border-line-strong rounded-lg">
+                      <p className="text-accent font-semibold text-center text-xs">
                         ⚠️ Teams must be equal size
                       </p>
                     </div>
                   )}
 
-                  <div className="flex gap-3 pt-4 border-t-2 border-slate-200">
+                  <div className="flex gap-3 pt-4 border-t-2 border-line">
                     <button
                       onClick={onCancel}
-                      className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
+                      className="px-6 py-3 bg-surface-2 text-ink rounded-xl font-semibold hover:bg-line-strong transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleConfirm}
                       disabled={newTeamA.length !== newTeamB.length || newTeamA.length === 0}
-                      className="flex-1 px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex-1 px-6 py-4 bg-accent text-accent-ink rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       Start Game {gameNumber}
                     </button>

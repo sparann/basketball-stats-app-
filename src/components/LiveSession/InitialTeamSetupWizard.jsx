@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLiveSession } from './LiveSessionContext';
+import { useUI } from '../../context/ui-context';
 
 const InitialTeamSetupWizard = ({ onComplete }) => {
   const { players, actions, gameNumber, allSessionPlayers } = useLiveSession();
+  const { toast } = useUI();
   const [step, setStep] = useState(1);
   const [teamASelection, setTeamASelection] = useState(new Set());
   const [teamBSelection, setTeamBSelection] = useState(new Set());
@@ -61,7 +63,7 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
 
   const handleTeamANext = () => {
     if (teamASelection.size === 0) {
-      alert('Please select at least 1 player for Team A');
+      toast('Pick at least one player for Team A', { type: 'error' });
       return;
     }
     setStep(2);
@@ -69,12 +71,12 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
 
   const handleTeamBNext = () => {
     if (teamBSelection.size === 0) {
-      alert('Please select at least 1 player for Team B');
+      toast('Pick at least one player for Team B', { type: 'error' });
       return;
     }
 
     if (teamASelection.size !== teamBSelection.size) {
-      alert(`Teams must be equal size. Team A has ${teamASelection.size} players, Team B has ${teamBSelection.size} players.`);
+      toast(`Teams must match: ${teamASelection.size} v ${teamBSelection.size}`, { type: 'error' });
       return;
     }
 
@@ -95,12 +97,12 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-100 overflow-y-auto z-50">
+    <div className="fixed inset-0 bg-court overflow-y-auto z-50">
       <div className="max-w-2xl mx-auto min-h-screen flex flex-col">
         <div className="flex-1 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-surface rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className={`p-6 border-b border-slate-200 ${
+        <div className={`p-6 border-b border-line ${
           step === 1
             ? 'bg-gradient-to-r from-blue-600 to-indigo-600'
             : 'bg-gradient-to-r from-red-600 to-rose-600'
@@ -126,7 +128,6 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
                 {allPlayers.map((player) => {
                   const isSelected = teamASelection.has(player.name);
                   const isDisabled = !isSelected && teamASelection.size >= 5;
-                  const fullPlayerData = allSessionPlayers?.find(p => p.name === player.name) || player;
                   return (
                     <button
                       key={player.name}
@@ -137,13 +138,13 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
                         isSelected
                           ? 'bg-blue-600 text-white shadow-md'
                           : isDisabled
-                          ? 'bg-slate-50 text-slate-400 border-2 border-slate-200 cursor-not-allowed opacity-50'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-2 border-slate-200'
+                          ? 'bg-surface-2 text-ink-3 border-2 border-line cursor-not-allowed opacity-50'
+                          : 'bg-surface-2 text-ink hover:bg-line-strong border-2 border-line'
                       }`}
                     >
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-slate-600 text-white flex items-center justify-center font-bold text-xs">
+                        <div className="w-8 h-8 rounded-full bg-surface-2 text-ink-2 flex items-center justify-center font-bold text-xs">
                           {player.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <p className="font-bold">{getDisplayName(player.name, allSessionPlayers)}</p>
@@ -174,7 +175,6 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
                 {availableForTeamB.map((player) => {
                   const isSelected = teamBSelection.has(player.name);
                   const isDisabled = !isSelected && teamBSelection.size >= 5;
-                  const fullPlayerData = allSessionPlayers?.find(p => p.name === player.name) || player;
                   return (
                     <button
                       key={player.name}
@@ -185,13 +185,13 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
                         isSelected
                           ? 'bg-red-600 text-white shadow-md'
                           : isDisabled
-                          ? 'bg-slate-50 text-slate-400 border-2 border-slate-200 cursor-not-allowed opacity-50'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-2 border-slate-200'
+                          ? 'bg-surface-2 text-ink-3 border-2 border-line cursor-not-allowed opacity-50'
+                          : 'bg-surface-2 text-ink hover:bg-line-strong border-2 border-line'
                       }`}
                     >
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-slate-600 text-white flex items-center justify-center font-bold text-xs">
+                        <div className="w-8 h-8 rounded-full bg-surface-2 text-ink-2 flex items-center justify-center font-bold text-xs">
                           {player.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <p className="font-bold">{getDisplayName(player.name, allSessionPlayers)}</p>
@@ -208,14 +208,14 @@ const InitialTeamSetupWizard = ({ onComplete }) => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(1)}
-                  className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
+                  className="px-6 py-3 bg-surface-2 text-ink rounded-xl font-semibold hover:bg-line-strong transition-colors"
                 >
                   ← Back
                 </button>
                 <button
                   onClick={handleTeamBNext}
                   disabled={teamBSelection.size !== teamASelection.size}
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-4 bg-accent text-accent-ink rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Start Game
                 </button>

@@ -1,9 +1,40 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-court text-ink font-sans antialiased;
+    overscroll-behavior-y: none;
+  }
+
+  /* Numbers line up in every list and table */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Uppercase section label, e.g. ACTIVE, BENCH */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-2;
+  }
+
+  /* Big condensed numerals and headings */
+  .display {
+    @apply font-display font-bold tabular;
+  }
+
+  /* 44px minimum tap target for anything a thumb hits */
+  .tap {
+    @apply min-h-tap;
+  }
 }

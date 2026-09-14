@@ -1,66 +1,80 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLiveSession } from './LiveSessionContext';
-import TeamColumn from './TeamColumn';
-import WinnerButtons from './WinnerButtons';
 import InitialTeamSetupWizard from './InitialTeamSetupWizard';
 import SimpleRotationFlow from './SimpleRotationFlow';
 import EndSessionModal from './EndSessionModal';
 import AddPlayerModal from './AddPlayerModal';
 import { formatDateString } from '../../utils/dateFormatter';
+import { useUI } from '../../context/ui-context';
 
-const LiveSessionInterface = ({ onExit }) => {
+const LiveSessionInterface = ({ onExit, startWithEndModal = false }) => {
   const { session, players, gameNumber, games, actions, isLoading, getWinStreak } = useLiveSession();
-  const [showInitialSetup, setShowInitialSetup] = useState(true);
+  const { toast, confirm } = useUI();
+  const [setupRequested, setSetupRequested] = useState(false);
   const [showPostGameFlow, setShowPostGameFlow] = useState(false);
-  const [showEndModal, setShowEndModal] = useState(false);
-  const [lastWinner, setLastWinner] = useState(null);
-  const [wakeLock, setWakeLock] = useState(null);
+  // "Finish & Save" on an unfinished session opens straight into the summary
+  const [showEndModal, setShowEndModal] = useState(Boolean(startWithEndModal));
+  const wakeLockRef = useRef(null);
   const [showStandings, setShowStandings] = useState(false);
   const [showAllGames, setShowAllGames] = useState(false);
   const [gameState, setGameState] = useState('playing'); // 'playing', 'between_games', 'setup'
   const [lastGameResult, setLastGameResult] = useState(null);
   const [showAddPlayerModal, setShowAddPlayerModal] = useState(false);
 
-  // Request wake lock to keep screen on
+  // Keep the screen on for the whole session. Browsers drop the lock when the
+  // tab is hidden, so re-request it when the tab comes back.
   useEffect(() => {
+    if (!('wakeLock' in navigator)) return undefined;
+
+    let cancelled = false;
+
     const requestWakeLock = async () => {
       try {
-        if ('wakeLock' in navigator) {
-          const lock = await navigator.wakeLock.request('screen');
-          setWakeLock(lock);
-          console.log('Wake lock acquired');
+        const lock = await navigator.wakeLock.request('screen');
+        if (cancelled) {
+          lock.release();
+          return;
         }
+        lock.addEventListener('release', () => {
+          if (wakeLockRef.current === lock) wakeLockRef.current = null;
+        });
+        wakeLockRef.current = lock;
       } catch (err) {
-        console.log('Wake lock error:', err);
+        console.warn('Wake lock unavailable:', err);
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && !wakeLockRef.current) {
+        requestWakeLock();
       }
     };
 
     requestWakeLock();
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      if (wakeLock) {
-        wakeLock.release();
-        console.log('Wake lock released');
+      cancelled = true;
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release();
+        wakeLockRef.current = null;
       }
     };
   }, []);
 
-  // Check if teams are set up
-  useEffect(() => {
-    if (players.teamA.length > 0 && players.teamB.length > 0) {
-      setShowInitialSetup(false);
-    }
-  }, [players]);
+  // The team-setup wizard shows until both teams have players, or when a reshoot is requested
+  const teamsAreSet = players.teamA.length > 0 && players.teamB.length > 0;
+  const showInitialSetup = setupRequested || !teamsAreSet;
 
   const handleInitialSetupComplete = useCallback(() => {
-    setShowInitialSetup(false);
+    setSetupRequested(false);
     setGameState('playing');
   }, []);
 
   const handleWinnerSelected = useCallback(async (winningTeam) => {
     try {
-      const result = await actions.markWinner(winningTeam);
-      setLastWinner(result);
+      await actions.markWinner(winningTeam);
       setLastGameResult({
         gameNumber: gameNumber,
         winningTeam: winningTeam,
@@ -69,28 +83,31 @@ const LiveSessionInterface = ({ onExit }) => {
       });
       setGameState('between_games');
     } catch (error) {
-      alert(`Error marking winner: ${error.message}`);
+      toast(`Couldn't save that game: ${error.message}`, { type: 'error' });
     }
-  }, [actions, gameNumber]);
+  }, [actions, gameNumber, toast]);
 
   const handlePostGameComplete = useCallback(() => {
     setShowPostGameFlow(false);
-    setLastWinner(null);
     setGameState('playing');
     setLastGameResult(null);
   }, []);
 
+  // With nobody on the bench the roster can't rotate, so skip the rotation
+  // screen and run it back. Reshoot stays available for switching teams up.
+  const noBench = players.sittingOut.length === 0;
+
   const handleStartNextGame = useCallback(() => {
+    if (noBench) {
+      setGameState('playing');
+      setLastGameResult(null);
+      return;
+    }
     setShowPostGameFlow(true);
-  }, []);
+  }, [noBench]);
 
   const handleCancelPostGameFlow = useCallback(() => {
     setShowPostGameFlow(false);
-  }, []);
-
-  const handleNoMoreGames = useCallback(() => {
-    setShowPostGameFlow(false);
-    setShowEndModal(true);
   }, []);
 
   const handleEndSession = useCallback(async () => {
@@ -98,50 +115,54 @@ const LiveSessionInterface = ({ onExit }) => {
       await actions.endSession();
       if (onExit) onExit();
     } catch (error) {
-      alert(`Error ending session: ${error.message}\n\nYour game data is safe. Please try again or contact support.`);
+      toast(`Couldn't end the session: ${error.message}. Your games are saved, try again.`, { type: 'error', duration: 6000 });
     }
-  }, [actions, onExit]);
+  }, [actions, onExit, toast]);
 
-  const handleExit = useCallback(() => {
+  const handleExit = useCallback(async () => {
     if (games.length > 0) {
-      const confirmed = window.confirm(
-        'You have games recorded in this session. Do you want to exit? The session will remain active and you can resume it later.'
-      );
-      if (confirmed && onExit) onExit();
-    } else {
-      if (onExit) onExit();
+      const ok = await confirm({
+        title: 'Pause this session?',
+        message: 'Your games are saved. The session stays active and you can resume it from Admin.',
+        confirmLabel: 'Pause'
+      });
+      if (ok && onExit) onExit();
+    } else if (onExit) {
+      onExit();
     }
-  }, [games, onExit]);
+  }, [games, onExit, confirm]);
 
   const handleUndoLastGame = useCallback(async () => {
     if (games.length === 0) return;
 
-    const confirmed = window.confirm(
-      'Are you sure you want to undo the last game? This will revert all stats and rosters.'
-    );
+    const ok = await confirm({
+      title: `Undo game ${games.length}?`,
+      message: 'The result is removed and the teams go back to how they were for that game.',
+      confirmLabel: 'Undo',
+      destructive: true
+    });
+    if (!ok) return;
 
-    if (confirmed) {
-      try {
-        await actions.undoLastGame();
-        alert('Last game undone successfully');
-      } catch (error) {
-        alert(`Error undoing game: ${error.message}`);
-      }
+    try {
+      await actions.undoLastGame();
+      toast(`Game ${games.length} undone`);
+    } catch (error) {
+      toast(`Couldn't undo: ${error.message}`, { type: 'error' });
     }
-  }, [actions, games]);
+  }, [actions, games, confirm, toast]);
 
   const handleReshootTeams = useCallback(() => {
     setShowPostGameFlow(false);
-    setShowInitialSetup(true);
+    setSetupRequested(true);
     setGameState('setup');
     setLastGameResult(null);
   }, []);
 
   if (!session) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-100">
+      <div className="flex items-center justify-center min-h-screen bg-surface-2">
         <div className="text-center">
-          <p className="text-slate-600 font-semibold">No active session</p>
+          <p className="text-ink-2 font-semibold">No active session</p>
           <button
             onClick={onExit}
             className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
@@ -154,23 +175,23 @@ const LiveSessionInterface = ({ onExit }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-100 overflow-y-auto">
+    <div className="fixed inset-0 z-40 bg-court overflow-y-auto">
       {/* Header */}
-      <div className="bg-white border-b-2 border-slate-200 shadow-sm sticky top-0 z-10">
+      <div className="bg-surface border-b-2 border-line shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <button
               onClick={handleExit}
-              className="text-slate-700 font-semibold text-sm hover:text-slate-900 transition-colors"
+              className="text-ink font-semibold text-sm hover:text-ink transition-colors"
             >
-              ← Exit
+              ← Pause
             </button>
 
             <div className="text-center">
-              <h1 className="text-base font-bold text-slate-900">
+              <h1 className="text-base font-bold text-ink">
                 Game {gameNumber}
               </h1>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-ink-2">
                 {formatDateString(session.date)}
                 {session.location && ` • ${session.location}`}
               </p>
@@ -179,7 +200,7 @@ const LiveSessionInterface = ({ onExit }) => {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowAddPlayerModal(true)}
-                className="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-700 rounded-lg font-bold text-lg hover:bg-blue-200 transition-colors"
+                className="w-8 h-8 flex items-center justify-center bg-surface-2 text-ink rounded-lg font-bold text-lg hover:bg-line-strong transition-colors"
                 title="Add new player"
               >
                 +
@@ -187,7 +208,7 @@ const LiveSessionInterface = ({ onExit }) => {
               {games.length > 0 && (
                 <button
                   onClick={handleUndoLastGame}
-                  className="w-8 h-8 flex items-center justify-center bg-amber-100 text-amber-700 rounded-lg font-bold text-sm hover:bg-amber-200 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center bg-amber-100 text-ink-2 rounded-lg font-bold text-sm hover:bg-amber-200 transition-colors"
                   title="Undo last game"
                 >
                   ↶
@@ -195,7 +216,7 @@ const LiveSessionInterface = ({ onExit }) => {
               )}
               <button
                 onClick={() => setShowEndModal(true)}
-                className="px-3 py-2 bg-green-600 text-white rounded-lg font-semibold text-xs hover:bg-green-700 transition-colors"
+                className="px-3 py-2 bg-accent text-accent-ink rounded-lg font-semibold text-xs hover:brightness-110 transition-colors"
               >
                 End
               </button>
@@ -210,12 +231,12 @@ const LiveSessionInterface = ({ onExit }) => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:items-stretch">
             {/* Left: Main Game Card - Teams + Status + Actions */}
             <div className="lg:col-span-2 flex">
-              <div className="bg-white rounded-xl border-2 border-slate-200 p-5 w-full">
+              <div className="bg-surface rounded-xl border-2 border-line p-5 w-full">
                 {/* Game Status & Actions */}
                 <div className="mb-5">
                   {gameState === 'playing' && (
                     <>
-                      <h3 className="text-center font-bold text-slate-900 mb-3">
+                      <h3 className="text-center font-bold text-ink mb-3">
                         Game {gameNumber} - In Progress
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -240,9 +261,9 @@ const LiveSessionInterface = ({ onExit }) => {
                   {gameState === 'between_games' && lastGameResult && (
                     <>
                       <div className="text-center mb-3">
-                        <p className="text-slate-600 text-sm font-semibold mb-1">Game {lastGameResult.gameNumber} Complete</p>
+                        <p className="text-ink-2 text-sm font-semibold mb-1">Game {lastGameResult.gameNumber} Complete</p>
                         <h3 className={`text-2xl font-bold ${
-                          lastGameResult.winningTeam === 'team_a' ? 'text-blue-600' : 'text-red-600'
+                          lastGameResult.winningTeam === 'team_a' ? 'text-blue-400' : 'text-red-400'
                         }`}>
                           {lastGameResult.winningTeam === 'team_a' ? 'Team A' : 'Team B'} Wins!
                         </h3>
@@ -251,19 +272,19 @@ const LiveSessionInterface = ({ onExit }) => {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <button
                           onClick={handleStartNextGame}
-                          className="px-4 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold text-base hover:shadow-lg transition-all"
+                          className="px-4 py-4 bg-accent text-accent-ink rounded-xl font-bold text-base hover:shadow-lg transition-all"
                         >
-                          Next Game
+                          {noBench ? 'Next Game · Same Teams' : 'Next Game'}
                         </button>
                         <button
                           onClick={handleReshootTeams}
-                          className="px-4 py-4 bg-slate-100 text-slate-700 rounded-xl font-bold text-base hover:bg-slate-200 transition-colors"
+                          className="px-4 py-4 bg-surface-2 text-ink rounded-xl font-bold text-base hover:bg-line-strong transition-colors"
                         >
                           Reshoot
                         </button>
                         <button
                           onClick={() => setShowEndModal(true)}
-                          className="px-4 py-4 bg-slate-100 text-slate-700 rounded-xl font-bold text-base hover:bg-slate-200 transition-colors"
+                          className="px-4 py-4 bg-surface-2 text-ink rounded-xl font-bold text-base hover:bg-line-strong transition-colors"
                         >
                           End
                         </button>
@@ -276,23 +297,23 @@ const LiveSessionInterface = ({ onExit }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   {/* Team A */}
                   <div>
-                    <div className="bg-blue-100 px-4 py-3 rounded-t-xl border-l-4 border-blue-600">
+                    <div className="bg-blue-950/60 px-4 py-3 rounded-t-xl border-l-4 border-blue-500">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="text-slate-900 font-bold text-base">
+                          <h3 className="text-ink font-bold text-base">
                             Team A {getWinStreak('team_a') >= 3 && '🔥'}
                           </h3>
-                          <p className="text-slate-600 text-xs mt-0.5">
+                          <p className="text-ink-2 text-xs mt-0.5">
                             {players.teamA.length} players
                           </p>
                         </div>
                       </div>
                     </div>
-                    <div className="bg-white border border-slate-200 border-t-0 rounded-b-xl p-4 space-y-2.5">
+                    <div className="bg-surface border border-line border-t-0 rounded-b-xl p-4 space-y-2.5">
                       {players.teamA.map((player) => (
-                        <div key={player.name} className="p-3 bg-slate-50 rounded-lg">
-                          <p className="font-semibold text-sm text-slate-900">{player.name}</p>
-                          <p className="text-xs text-slate-500">{player.gamesWon}-{player.gamesPlayed - player.gamesWon}</p>
+                        <div key={player.name} className="p-3 bg-surface-2 rounded-lg">
+                          <p className="font-semibold text-sm text-ink">{player.name}</p>
+                          <p className="text-xs text-ink-2">{player.gamesWon}-{player.gamesPlayed - player.gamesWon}</p>
                         </div>
                       ))}
                     </div>
@@ -300,23 +321,23 @@ const LiveSessionInterface = ({ onExit }) => {
 
                   {/* Team B */}
                   <div>
-                    <div className="bg-red-100 px-4 py-3 rounded-t-xl border-l-4 border-red-600">
+                    <div className="bg-red-950/60 px-4 py-3 rounded-t-xl border-l-4 border-red-500">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="text-slate-900 font-bold text-base">
+                          <h3 className="text-ink font-bold text-base">
                             Team B {getWinStreak('team_b') >= 3 && '🔥'}
                           </h3>
-                          <p className="text-slate-600 text-xs mt-0.5">
+                          <p className="text-ink-2 text-xs mt-0.5">
                             {players.teamB.length} players
                           </p>
                         </div>
                       </div>
                     </div>
-                    <div className="bg-white border border-slate-200 border-t-0 rounded-b-xl p-4 space-y-2.5">
+                    <div className="bg-surface border border-line border-t-0 rounded-b-xl p-4 space-y-2.5">
                       {players.teamB.map((player) => (
-                        <div key={player.name} className="p-3 bg-slate-50 rounded-lg">
-                          <p className="font-semibold text-sm text-slate-900">{player.name}</p>
-                          <p className="text-xs text-slate-500">{player.gamesWon}-{player.gamesPlayed - player.gamesWon}</p>
+                        <div key={player.name} className="p-3 bg-surface-2 rounded-lg">
+                          <p className="font-semibold text-sm text-ink">{player.name}</p>
+                          <p className="text-xs text-ink-2">{player.gamesWon}-{player.gamesPlayed - player.gamesWon}</p>
                         </div>
                       ))}
                     </div>
@@ -325,25 +346,25 @@ const LiveSessionInterface = ({ onExit }) => {
 
                 {/* Bench */}
                 <div>
-                  <div className="bg-slate-200 px-4 py-3 rounded-t-xl border-l-4 border-slate-600">
+                  <div className="bg-surface-2 px-4 py-3 rounded-t-xl border-l-4 border-line-strong">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-slate-900 font-bold text-base">Bench</h3>
-                        <p className="text-slate-600 text-xs mt-0.5">
+                        <h3 className="text-ink font-bold text-base">Bench</h3>
+                        <p className="text-ink-2 text-xs mt-0.5">
                           {players.sittingOut.length} {players.sittingOut.length === 1 ? 'player' : 'players'}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white border border-slate-200 border-t-0 rounded-b-xl p-4">
+                  <div className="bg-surface border border-line border-t-0 rounded-b-xl p-4">
                     {players.sittingOut.length === 0 ? (
-                      <p className="text-center text-slate-400 text-sm py-4">All players on teams</p>
+                      <p className="text-center text-ink-3 text-sm py-4">All players on teams</p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         {players.sittingOut.map((player) => (
-                          <div key={player.name} className="p-3 bg-slate-50 rounded-lg">
-                            <p className="font-semibold text-sm text-slate-900">{player.name}</p>
-                            <p className="text-xs text-slate-500">{player.gamesWon}-{player.gamesPlayed - player.gamesWon}</p>
+                          <div key={player.name} className="p-3 bg-surface-2 rounded-lg">
+                            <p className="font-semibold text-sm text-ink">{player.name}</p>
+                            <p className="text-xs text-ink-2">{player.gamesWon}-{player.gamesPlayed - player.gamesWon}</p>
                           </div>
                         ))}
                       </div>
@@ -358,22 +379,22 @@ const LiveSessionInterface = ({ onExit }) => {
 
               {/* Session Stats Card */}
               {games.length > 0 && (
-                <div className="bg-white rounded-xl border-2 border-slate-200 p-4">
-                  <h3 className="font-bold text-slate-900 mb-3">Session Stats</h3>
+                <div className="bg-surface rounded-xl border-2 border-line p-4">
+                  <h3 className="font-bold text-ink mb-3">Session Stats</h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-slate-600">Games Played</p>
-                      <p className="text-2xl font-bold text-slate-900">{games.length}</p>
+                      <p className="text-sm text-ink-2">Games Played</p>
+                      <p className="text-2xl font-bold text-ink">{games.length}</p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-slate-600">Team A Record</p>
-                      <p className="text-2xl font-bold text-blue-600">
+                      <p className="text-sm text-ink-2">Team A Record</p>
+                      <p className="text-2xl font-bold text-blue-400">
                         {games.filter(g => g.winning_team === 'team_a').length}-{games.filter(g => g.winning_team === 'team_b').length}
                       </p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-slate-600">Team B Record</p>
-                      <p className="text-2xl font-bold text-red-600">
+                      <p className="text-sm text-ink-2">Team B Record</p>
+                      <p className="text-2xl font-bold text-red-400">
                         {games.filter(g => g.winning_team === 'team_b').length}-{games.filter(g => g.winning_team === 'team_a').length}
                       </p>
                     </div>
@@ -383,30 +404,30 @@ const LiveSessionInterface = ({ onExit }) => {
 
               {/* Recent Games Card */}
               {games.length > 0 && (
-                <div className="bg-white rounded-xl border-2 border-slate-200 p-4">
+                <div className="bg-surface rounded-xl border-2 border-line p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-slate-900">Recent Games</h3>
+                    <h3 className="font-bold text-ink">Recent Games</h3>
                     <button
                       onClick={() => setShowAllGames(true)}
-                      className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-xl font-bold"
+                      className="w-7 h-7 flex items-center justify-center text-ink-2 hover:bg-surface-2 rounded-lg transition-colors text-xl font-bold"
                     >
                       +
                     </button>
                   </div>
                   <div className="space-y-2">
                     {games.slice().reverse().slice(0, 3).map((game) => (
-                      <div key={game.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg">
+                      <div key={game.id} className="flex items-center justify-between p-2.5 bg-surface-2 rounded-lg">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-400">
+                          <span className="text-xs font-bold text-ink-3">
                             Game {game.game_number}
                           </span>
                           <span className={`text-sm font-bold ${
-                            game.winning_team === 'team_a' ? 'text-blue-600' : 'text-red-600'
+                            game.winning_team === 'team_a' ? 'text-blue-400' : 'text-red-400'
                           }`}>
                             {game.winning_team === 'team_a' ? 'Team A' : 'Team B'}
                           </span>
                         </div>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-ink-3">
                           {new Date(game.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
@@ -417,12 +438,12 @@ const LiveSessionInterface = ({ onExit }) => {
 
               {/* Player Standings Card */}
               {games.length > 0 && (
-                <div className="bg-white rounded-xl border-2 border-slate-200 p-4 flex flex-col flex-1 min-h-0">
+                <div className="bg-surface rounded-xl border-2 border-line p-4 flex flex-col flex-1 min-h-0">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-slate-900">Player Standings</h3>
+                    <h3 className="font-bold text-ink">Player Standings</h3>
                     <button
                       onClick={() => setShowStandings(true)}
-                      className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-xl font-bold"
+                      className="w-7 h-7 flex items-center justify-center text-ink-2 hover:bg-surface-2 rounded-lg transition-colors text-xl font-bold"
                     >
                       +
                     </button>
@@ -444,23 +465,23 @@ const LiveSessionInterface = ({ onExit }) => {
                         return (
                           <div
                             key={player.name}
-                            className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50"
+                            className="flex items-center justify-between p-2.5 rounded-lg bg-surface-2"
                           >
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-slate-400">
+                              <span className="text-sm font-bold text-ink-3">
                                 #{index + 1}
                               </span>
                               <div>
-                                <p className="font-bold text-sm text-slate-900">
+                                <p className="font-bold text-sm text-ink">
                                   {player.name}
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="text-xs text-ink-2">
                                   {player.gamesWon}W - {player.gamesPlayed - player.gamesWon}L
                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="font-bold text-slate-700">
+                              <p className="font-bold text-ink">
                                 {winRate}%
                               </p>
                             </div>
@@ -505,12 +526,12 @@ const LiveSessionInterface = ({ onExit }) => {
       {/* Player Standings Modal */}
       {showStandings && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-slate-50 to-slate-100">
-              <h2 className="text-xl font-bold text-slate-900">Player Standings</h2>
+          <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-line flex items-center justify-between bg-surface-2">
+              <h2 className="text-xl font-bold text-ink">Player Standings</h2>
               <button
                 onClick={() => setShowStandings(false)}
-                className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                className="w-8 h-8 flex items-center justify-center text-ink-2 hover:bg-line-strong rounded-lg transition-colors"
               >
                 ✕
               </button>
@@ -532,23 +553,23 @@ const LiveSessionInterface = ({ onExit }) => {
                     return (
                       <div
                         key={player.name}
-                        className="flex items-center justify-between p-3 rounded-lg bg-slate-50"
+                        className="flex items-center justify-between p-3 rounded-lg bg-surface-2"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-base font-bold text-slate-400">
+                          <span className="text-base font-bold text-ink-3">
                             #{index + 1}
                           </span>
                           <div>
-                            <p className="font-bold text-sm text-slate-900">
+                            <p className="font-bold text-sm text-ink">
                               {player.name}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-ink-2">
                               {player.gamesWon}W - {player.gamesPlayed - player.gamesWon}L • {player.gamesPlayed} games
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-bold text-slate-700">
+                          <p className="text-lg font-bold text-ink">
                             {winRate}%
                           </p>
                         </div>
@@ -564,12 +585,12 @@ const LiveSessionInterface = ({ onExit }) => {
       {/* Recent Games Modal */}
       {showAllGames && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-slate-50 to-slate-100">
-              <h2 className="text-xl font-bold text-slate-900">All Games</h2>
+          <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-line flex items-center justify-between bg-surface-2">
+              <h2 className="text-xl font-bold text-ink">All Games</h2>
               <button
                 onClick={() => setShowAllGames(false)}
-                className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                className="w-8 h-8 flex items-center justify-center text-ink-2 hover:bg-line-strong rounded-lg transition-colors"
               >
                 ✕
               </button>
@@ -578,17 +599,17 @@ const LiveSessionInterface = ({ onExit }) => {
             <div className="p-5 overflow-y-auto flex-1">
               <div className="space-y-2">
                 {games.slice().reverse().map((game) => (
-                  <div key={game.id} className="p-3 bg-slate-50 rounded-lg">
+                  <div key={game.id} className="p-3 bg-surface-2 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-bold text-slate-400">
+                      <span className="text-sm font-bold text-ink-3">
                         Game {game.game_number}
                       </span>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-ink-3">
                         {new Date(game.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <div className={`text-base font-bold ${
-                      game.winning_team === 'team_a' ? 'text-blue-600' : 'text-red-600'
+                      game.winning_team === 'team_a' ? 'text-blue-400' : 'text-red-400'
                     }`}>
                       {game.winning_team === 'team_a' ? 'Team A' : 'Team B'} Won
                     </div>

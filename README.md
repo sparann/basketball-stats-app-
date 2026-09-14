@@ -1,249 +1,98 @@
-# Basketball Stats Tracker
+# Wyatt's Win Tracker
 
-A simple, clean React web app for tracking pickup basketball win percentages with historical session data. View-only for friends, with easy data updates via JSON file editing.
+Standings for a pickup basketball group, plus a courtside mode for recording
+games as they happen. Built for phones. Live at https://sparan.vercel.app.
 
-## Features
+## What it does
 
-- **Live Session Mode** 🔥 NEW!
-  - Real-time game tracking courtside
-  - Quick entry (<1 minute between games)
-  - Smart team rotation logic
-  - Game-by-game data collection
-  - Mobile-optimized interface
-  - Offline support with auto-sync
-  - See [LIVE_SESSION_SETUP.md](LIVE_SESSION_SETUP.md) for details
+- **Standings.** Every player ranked by win percentage. Players need a minimum
+  number of games (40% of the group average, between 5 and 20), two sessions,
+  and a game in the last 14 days to qualify. Everyone else sits in *Needs more
+  games* or *Inactive*.
+- **Player pages.** Win rate, last ten sessions, best teammate, best court,
+  full history.
+- **Sessions.** Every night played, with the MVP for each.
+- **Admin.** Password-gated. Add or edit sessions by hand, manage players and
+  courts, and run a **live session**: pick teams, tap the winner after each
+  game, rotate the bench, end the night and it saves to the standings.
 
-- **Admin Panel**: Secure management interface
-  - Add/edit/delete sessions and players
-  - Manage court locations
-  - Start live sessions
-  - View session history
+## Stack
 
-- **Player Summary Dashboard**: Card-based view showing overall stats for each player
-  - Win percentage with color coding (green >70%, yellow 50-70%, red <50%)
-  - Total games played and won
-  - Sessions attended
-  - Last played date
-  - Performance trend chart
+Vite, React 19, React Router, Tailwind 3, Supabase (Postgres + Storage).
+No server code. Deployed on Vercel from `main`.
 
-- **Session Log**: Complete history of all basketball sessions
-  - Sortable columns
-  - Filter by player
-  - Export to CSV
-  - Show/hide notes
-
-- **Responsive Design**: Works perfectly on desktop, tablet, and mobile
-- **Database Storage**: Powered by Supabase for real-time data sync
-
-## Live Demo
-
-🔗 [View the app here](#) _(Update this with your deployed URL)_
-
-## How to Add New Data
-
-### 1. Edit the Data File
-
-Open `src/data/stats.json` in any text editor. The file structure looks like this:
-
-```json
-{
-  "sessions": [
-    {
-      "date": "2025-01-15",
-      "players": [
-        {
-          "name": "Mike Johnson",
-          "gamesPlayed": 10,
-          "gamesWon": 7,
-          "notes": "Great shooting day"
-        }
-      ]
-    }
-  ]
-}
-```
-
-### 2. Add a New Session
-
-To add a new session, append a new object to the `sessions` array:
-
-```json
-{
-  "date": "2025-02-05",
-  "players": [
-    {
-      "name": "Mike Johnson",
-      "gamesPlayed": 15,
-      "gamesWon": 11,
-      "notes": ""
-    },
-    {
-      "name": "Sarah Chen",
-      "gamesPlayed": 15,
-      "gamesWon": 10,
-      "notes": "Back after a break"
-    }
-  ]
-}
-```
-
-**Important Notes**:
-- Date format: `YYYY-MM-DD`
-- `gamesPlayed` and `gamesWon` must be numbers
-- `notes` can be empty (`""`) or contain text
-- Don't forget commas between objects
-- New players are automatically added to the system
-
-### 3. Deploy the Update
-
-Once you've edited the JSON file:
+## Local development
 
 ```bash
-git add src/data/stats.json
-git commit -m "Add session from 2025-02-05"
-git push
-```
-
-The app will auto-deploy within 1-2 minutes (depending on your hosting platform).
-
-## Local Development
-
-### Prerequisites
-
-- Node.js 16+ and npm
-
-### Setup
-
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd basketball-stats-app
-
-# Install dependencies
 npm install
-
-# Start development server
-npm run dev
-```
-
-The app will be available at `http://localhost:5173`
-
-### Build for Production
-
-```bash
+npm run dev        # http://localhost:5173
+npm run lint
 npm run build
 ```
 
-This creates an optimized production build in the `dist/` folder.
-
-## Deployment Options
-
-### Option 1: Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Click "New Project"
-4. Import your GitHub repository
-5. Vercel auto-detects Vite and configures everything
-6. Click "Deploy"
-
-**Auto-deploy**: Every push to `main` branch triggers a new deployment.
-
-### Option 2: Netlify
-
-1. Push your code to GitHub
-2. Go to [netlify.com](https://netlify.com)
-3. Click "Add new site" → "Import an existing project"
-4. Connect to GitHub and select your repository
-5. Build settings:
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-6. Click "Deploy"
-
-**Auto-deploy**: Every push to `main` branch triggers a new deployment.
-
-### Option 3: GitHub Pages
-
-1. Add to `vite.config.js`:
-
-```js
-export default defineConfig({
-  plugins: [react()],
-  base: '/basketball-stats-app/' // Replace with your repo name
-})
-```
-
-2. Add to `package.json`:
-
-```json
-{
-  "scripts": {
-    "deploy": "npm run build && gh-pages -d dist"
-  }
-}
-```
-
-3. Install gh-pages:
-
-```bash
-npm install --save-dev gh-pages
-```
-
-4. Deploy:
-
-```bash
-npm run deploy
-```
-
-**URL**: `https://yourusername.github.io/basketball-stats-app`
-
-## Tech Stack
-
-- **Framework**: Vite + React 19
-- **Language**: JavaScript
-- **Styling**: Tailwind CSS
-- **Database**: Supabase (PostgreSQL)
-- **Real-time**: Supabase Realtime
-- **Hosting**: Vercel/Netlify/GitHub Pages
-
-## Project Structure
+Create `.env.local` (git-ignored). Either point at Supabase:
 
 ```
-basketball-stats-app/
-├── src/
-│   ├── data/
-│   │   └── stats.json          # All session data
-│   ├── components/
-│   │   ├── Header.jsx
-│   │   ├── PlayerCard.jsx
-│   │   ├── PlayerSummary.jsx
-│   │   └── SessionLog.jsx
-│   ├── utils/
-│   │   └── calculations.js     # Win % calculations
-│   ├── App.jsx
-│   ├── App.css
-│   └── main.jsx
-├── package.json
-└── README.md
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+VITE_ADMIN_PASSWORD=...
 ```
 
-## Future Enhancement Ideas
+or work offline with sample data:
 
-- ✅ ~~Simple admin panel for in-browser editing~~ (Implemented)
-- ✅ ~~Live session tracking~~ (Implemented)
-- "Who Wins With Who" analytics dashboard
-- Player chemistry and team composition analysis
-- Head-to-head comparison between players
-- Session MVP badges based on win rate
-- Dark mode toggle
-- Export stats as images for social media
-- Multi-device real-time sync
-- Spectator view for live sessions
+```
+VITE_DEV_SKIP_GATE=true       # skip the "pick the best player" gate
+VITE_DEV_SAMPLE_DATA=true     # load src/data/sample-sessions.json
+```
 
-## Questions or Issues?
+The dev flags only apply to `npm run dev`; production builds ignore them.
 
-Open an issue on GitHub or contact the project maintainer.
+## Database
 
----
+Supabase tables, all with public read/write policies for the anon key
+(auth is on the roadmap):
 
-Made with ❤️ and 🏀
+| Table | Purpose |
+|---|---|
+| `players` | One row per player: name, injured, pictureUrl, height, weight |
+| `sessions` | One row per night: date, location, `players` jsonb with games played and won |
+| `live_sessions` | A courtside session in progress or finished |
+| `live_session_players` | Per-player counters inside a live session |
+| `games` | Each game's rosters and winner |
+
+Photos live in the `basketball-stats` storage bucket under `player-photos/`.
+
+Schema lives in `supabase/migrations/`. For a fresh project, run them in
+order in the Supabase SQL editor.
+
+## Deploying
+
+Vercel builds every push. `main` is production; other branches get a preview
+URL. The three `VITE_` variables must be set for both Production and Preview
+environments. `vercel.json` rewrites all paths to `index.html` so deep links
+work.
+
+## Project layout
+
+```
+src/
+  App.jsx                 gate, providers, routes, tab bar
+  context/                DataProvider (players, sessions, admin), UIProvider (toast, confirm)
+  pages/                  Standings, Player, Sessions, Session, Admin
+  components/ui/          Icon, Avatar, Sparkline, Sheet, Button, PageHeader, TabBar
+  components/             admin panel, modals, captcha gate
+  components/LiveSession/ courtside mode
+  lib/                    supabase client, photo resize, rename helper
+  utils/                  win-rate math, standings groups, dates, names
+  data/                   sample fixture for local development
+```
+
+## Roadmap
+
+- Courtside redesign: Light and Dark teams, winner buttons in the thumb zone,
+  one-screen rotation.
+- Stats derived from `games` instead of stored counters.
+- Player ids instead of names as the join key.
+- Courts stored in Supabase instead of the browser.
+- Supabase Auth for admins, write policies scoped to signed-in users.
+- Live standings for people on the bench.
