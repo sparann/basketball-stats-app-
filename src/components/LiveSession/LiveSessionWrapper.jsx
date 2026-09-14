@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLiveSession } from './LiveSessionContext';
 import LiveSessionInterface from './LiveSessionInterface';
 
-const LiveSessionWrapper = ({ sessionId, onExit }) => {
+const LiveSessionWrapper = ({ sessionId, onExit, startWithEndModal = false }) => {
   const { session, actions } = useLiveSession();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,10 +27,10 @@ const LiveSessionWrapper = ({ sessionId, onExit }) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-100">
+      <div className="flex items-center justify-center min-h-screen bg-surface-2">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-slate-600 font-semibold">Loading session...</p>
+          <p className="text-ink-2 font-semibold">Loading session...</p>
         </div>
       </div>
     );
@@ -38,11 +38,11 @@ const LiveSessionWrapper = ({ sessionId, onExit }) => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-100">
+      <div className="flex items-center justify-center min-h-screen bg-surface-2">
         <div className="text-center max-w-md">
           <div className="text-red-600 text-4xl mb-4">⚠️</div>
-          <p className="text-slate-900 font-bold text-lg mb-2">Error Loading Session</p>
-          <p className="text-slate-600 mb-4">{error}</p>
+          <p className="text-ink font-bold text-lg mb-2">Error Loading Session</p>
+          <p className="text-ink-2 mb-4">{error}</p>
           <button
             onClick={onExit}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
@@ -54,7 +54,7 @@ const LiveSessionWrapper = ({ sessionId, onExit }) => {
     );
   }
 
-  return <LiveSessionInterface onExit={onExit} />;
+  return <LiveSessionInterface onExit={onExit} startWithEndModal={startWithEndModal} />;
 };
 
 export default LiveSessionWrapper;

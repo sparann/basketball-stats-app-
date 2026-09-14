@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 
 const LiveSessionContext = createContext(null);
 
+// eslint-disable-next-line react-refresh/only-export-components -- the hook belongs beside its provider
 export const useLiveSession = () => {
   const context = useContext(LiveSessionContext);
   if (!context) {
@@ -289,12 +290,11 @@ export const LiveSessionProvider = ({ children }) => {
       return;
     }
 
-    console.log('✅ Roster update validated successfully');
     setPlayers(prev => ({
       ...prev,
       ...normalizedUpdates
     }));
-  }, [allSessionPlayers, getPlayerByName, validateRosterUpdate]);
+  }, [getPlayerByName, validateRosterUpdate]);
 
   // Mark game winner and save
   const markWinner = useCallback(async (winningTeam) => {
@@ -314,9 +314,11 @@ export const LiveSessionProvider = ({ children }) => {
         winning_team: winningTeam
       };
 
-      const { error: gameError } = await supabase
+      const { data: savedGame, error: gameError } = await supabase
         .from('games')
-        .insert(gameData);
+        .insert(gameData)
+        .select()
+        .single();
 
       if (gameError) throw gameError;
 
@@ -389,7 +391,7 @@ export const LiveSessionProvider = ({ children }) => {
         return p;
       }));
 
-      setGames(prev => [...prev, gameData]);
+      setGames(prev => [...prev, savedGame || gameData]);
       setGameNumber(prev => prev + 1);
 
       return { winningTeam, losingTeam: winningTeam === 'team_a' ? 'team_b' : 'team_a' };
@@ -420,57 +422,57 @@ export const LiveSessionProvider = ({ children }) => {
 
       if (deleteError) throw deleteError;
 
-      // Revert player stats
-      const winningPlayers = lastGame.winning_team === 'team_a'
+      // Revert stats for everyone who was on the floor for that game
+      const winningNames = lastGame.winning_team === 'team_a'
         ? lastGame.team_a_players
         : lastGame.team_b_players;
-      const allPlayers = [...lastGame.team_a_players, ...lastGame.team_b_players];
+      const playedNames = new Set([...lastGame.team_a_players, ...lastGame.team_b_players]);
 
-      for (const playerName of allPlayers) {
-        const wasWinner = winningPlayers.includes(playerName);
-        const player = [...players.teamA, ...players.teamB, ...players.sittingOut]
-          .find(p => p.name === playerName);
+      const revertedPlayers = allSessionPlayers.map(p => {
+        if (!playedNames.has(p.name)) return p;
+        return {
+          ...p,
+          gamesPlayed: Math.max(0, p.gamesPlayed - 1),
+          gamesWon: Math.max(0, p.gamesWon - (winningNames.includes(p.name) ? 1 : 0))
+        };
+      });
 
-        if (player) {
-          await supabase
-            .from('live_session_players')
-            .update({
-              total_games_played: Math.max(0, player.gamesPlayed - 1),
-              total_games_won: Math.max(0, player.gamesWon - (wasWinner ? 1 : 0))
-            })
-            .eq('live_session_id', session.id)
-            .eq('player_name', playerName);
-        }
+      const statUpdates = revertedPlayers
+        .filter(p => playedNames.has(p.name))
+        .map(p => ({
+          live_session_id: session.id,
+          player_name: p.name,
+          total_games_played: p.gamesPlayed,
+          total_games_won: p.gamesWon
+        }));
+
+      if (statUpdates.length > 0) {
+        const { error: updateError } = await supabase
+          .from('live_session_players')
+          .upsert(statUpdates, { onConflict: 'live_session_id,player_name' });
+
+        if (updateError) throw updateError;
       }
 
-      // Update local state
+      // Update local state so the screen matches the database
+      const byName = new Map(revertedPlayers.map(p => [p.name, p]));
+      setAllSessionPlayers(revertedPlayers);
       setGames(prev => prev.slice(0, -1));
       setGameNumber(prev => Math.max(1, prev - 1));
 
-      // Restore previous roster
-      if (games.length > 1) {
-        const previousGame = games[games.length - 2];
-        const allPlayerObjects = [...players.teamA, ...players.teamB, ...players.sittingOut];
-
-        setPlayers({
-          teamA: previousGame.team_a_players.map(name =>
-            allPlayerObjects.find(p => p.name === name)
-          ),
-          teamB: previousGame.team_b_players.map(name =>
-            allPlayerObjects.find(p => p.name === name)
-          ),
-          sittingOut: previousGame.sitting_out_players.map(name =>
-            allPlayerObjects.find(p => p.name === name)
-          )
-        });
-      }
+      // Put the teams back the way they were for the undone game so it can be re-recorded
+      setPlayers({
+        teamA: lastGame.team_a_players.map(name => byName.get(name)).filter(Boolean),
+        teamB: lastGame.team_b_players.map(name => byName.get(name)).filter(Boolean),
+        sittingOut: revertedPlayers.filter(p => !playedNames.has(p.name))
+      });
     } catch (err) {
       setError(err.message);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, [session, games, players]);
+  }, [session, games, allSessionPlayers]);
 
   // End session and convert to legacy format
   const endSession = useCallback(async () => {
@@ -512,8 +514,6 @@ export const LiveSessionProvider = ({ children }) => {
         }))
       };
 
-      console.log('💾 Preparing to save session:', aggregatedSession);
-
       // Validate required fields
       if (!aggregatedSession.date) {
         throw new Error('Session date is required for saving');
@@ -523,19 +523,14 @@ export const LiveSessionProvider = ({ children }) => {
         throw new Error('Session must have at least one player');
       }
 
-      console.log('✅ Validation passed, inserting into sessions table...');
-
-      const { data: insertedSession, error: sessionInsertError } = await supabase
+      const { error: sessionInsertError } = await supabase
         .from('sessions')
-        .insert(aggregatedSession)
-        .select();
+        .insert(aggregatedSession);
 
       if (sessionInsertError) {
-        console.error('❌ Failed to save session:', sessionInsertError);
+        console.error('Failed to save session:', sessionInsertError);
         throw new Error(`Failed to save session: ${sessionInsertError.message}`);
       }
-
-      console.log('✅ Session saved successfully:', insertedSession);
 
       // Clear localStorage backup
       localStorage.removeItem('liveSessionBackup');
@@ -581,7 +576,26 @@ export const LiveSessionProvider = ({ children }) => {
     if (!session) return;
 
     try {
-      // Add player to database
+      // Make sure the player exists in the players table. Standings are built
+      // from that table, so a name that only lives in the live session would
+      // have games recorded but never show up.
+      const { data: existing, error: lookupError } = await supabase
+        .from('players')
+        .select('name')
+        .eq('name', playerName)
+        .maybeSingle();
+
+      if (lookupError) throw lookupError;
+
+      if (!existing) {
+        const { error: createError } = await supabase
+          .from('players')
+          .insert({ name: playerName });
+
+        if (createError) throw createError;
+      }
+
+      // Add player to this session
       const { error: insertError } = await supabase
         .from('live_session_players')
         .insert({

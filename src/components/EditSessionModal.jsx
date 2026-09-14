@@ -96,7 +96,7 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
           const { error } = await supabase
             .from('sessions')
             .update(sessionData)
-            .eq('date', session.date);
+            .eq('id', session.id);
 
           if (error) throw error;
         } else {
@@ -122,29 +122,29 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
   };
 
   const getMessageClass = () => {
-    if (message.type === 'error') return 'bg-red-50 text-red-700 border-red-200';
-    if (message.type === 'success') return 'bg-green-50 text-green-700 border-green-200';
-    if (message.type === 'warning') return 'bg-amber-50 text-amber-700 border-amber-200';
-    return 'bg-slate-50 text-slate-700 border-slate-200';
+    if (message.type === 'error') return 'bg-danger-soft text-danger border-danger';
+    if (message.type === 'success') return 'bg-accent-soft text-accent border-line-strong';
+    if (message.type === 'warning') return 'bg-accent-soft text-ink-2 border-line-strong';
+    return 'bg-surface-2 text-ink border-line';
   };
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-surface rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-200">
+        <div className="p-6 border-b border-line">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-900">
+            <h2 className="text-2xl font-bold text-ink">
               {isEditing ? 'Edit Session' : 'Add New Session'}
             </h2>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 text-2xl font-bold transition-colors"
+              className="text-ink-3 hover:text-ink text-2xl font-bold transition-colors"
             >
               ×
             </button>
@@ -154,14 +154,14 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Session Date */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700 uppercase tracking-wide">
+            <label className="block text-sm font-bold text-ink uppercase tracking-wide">
               Session Date
             </label>
             <input
               type="date"
               value={sessionDate}
               onChange={(e) => setSessionDate(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 border-2 border-line rounded-xl font-semibold text-ink focus:border-accent focus:outline-none transition-colors"
               required
               disabled={isEditing}
             />
@@ -169,13 +169,13 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
 
           {/* Location */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700 uppercase tracking-wide">
+            <label className="block text-sm font-bold text-ink uppercase tracking-wide">
               Location (Optional)
             </label>
             <select
               value={sessionLocation}
               onChange={(e) => setSessionLocation(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 border-2 border-line rounded-xl font-semibold text-ink focus:border-accent focus:outline-none transition-colors"
             >
               <option value="">No location</option>
               {locations.map((loc) => (
@@ -188,7 +188,7 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
 
           {/* Total Games */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700 uppercase tracking-wide">
+            <label className="block text-sm font-bold text-ink uppercase tracking-wide">
               Total Games Played (Optional)
             </label>
             <input
@@ -196,23 +196,23 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
               value={totalGames}
               onChange={(e) => setTotalGames(e.target.value)}
               placeholder="e.g., 10"
-              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 border-2 border-line rounded-xl font-semibold text-ink focus:border-accent focus:outline-none transition-colors"
               min="1"
             />
-            <p className="text-xs text-slate-500">If not filled out, will use the highest number of games played by any player in this session</p>
+            <p className="text-xs text-ink-2">If not filled out, will use the highest number of games played by any player in this session</p>
           </div>
 
           {/* Players */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-slate-900">Players</h3>
+            <h3 className="text-lg font-bold text-ink">Players</h3>
 
             {players.map((player, index) => (
-              <div key={index} className="space-y-3 p-4 bg-slate-50 rounded-xl">
+              <div key={index} className="space-y-3 p-4 bg-surface-2 rounded-xl">
                 <div className="flex gap-3 items-start flex-wrap">
                   <select
                     value={player.name}
                     onChange={(e) => updatePlayer(index, 'name', e.target.value)}
-                    className="flex-1 min-w-[150px] px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
+                    className="flex-1 min-w-[150px] px-4 py-3 border-2 border-line rounded-xl font-semibold text-ink focus:border-accent focus:outline-none transition-colors"
                     required
                   >
                     <option value="">Select Player</option>
@@ -223,12 +223,12 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
                     ))}
                   </select>
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-bold text-slate-600 px-1">Games Played</label>
+                    <label className="text-xs font-bold text-ink-2 px-1">Games Played</label>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => updatePlayer(index, 'gamesPlayed', Math.max(0, parseInt(player.gamesPlayed || 0) - 1).toString())}
-                        className="w-10 h-10 bg-white border-2 border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                        className="w-10 h-10 bg-surface border-2 border-line rounded-lg font-bold text-ink hover:bg-surface-2 transition-colors"
                       >
                         -
                       </button>
@@ -236,26 +236,26 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
                         type="number"
                         value={player.gamesPlayed}
                         onChange={(e) => updatePlayer(index, 'gamesPlayed', e.target.value)}
-                        className="w-16 px-2 py-2 border-2 border-slate-200 rounded-lg font-bold text-center text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
+                        className="w-16 px-2 py-2 border-2 border-line rounded-lg font-bold text-center text-ink focus:border-accent focus:outline-none transition-colors"
                         min="0"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => updatePlayer(index, 'gamesPlayed', (parseInt(player.gamesPlayed || 0) + 1).toString())}
-                        className="w-10 h-10 bg-white border-2 border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                        className="w-10 h-10 bg-surface border-2 border-line rounded-lg font-bold text-ink hover:bg-surface-2 transition-colors"
                       >
                         +
                       </button>
                     </div>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-bold text-slate-600 px-1">Games Won</label>
+                    <label className="text-xs font-bold text-ink-2 px-1">Games Won</label>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => updatePlayer(index, 'gamesWon', Math.max(0, parseInt(player.gamesWon || 0) - 1).toString())}
-                        className="w-10 h-10 bg-white border-2 border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                        className="w-10 h-10 bg-surface border-2 border-line rounded-lg font-bold text-ink hover:bg-surface-2 transition-colors"
                       >
                         -
                       </button>
@@ -263,14 +263,14 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
                         type="number"
                         value={player.gamesWon}
                         onChange={(e) => updatePlayer(index, 'gamesWon', e.target.value)}
-                        className="w-16 px-2 py-2 border-2 border-slate-200 rounded-lg font-bold text-center text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
+                        className="w-16 px-2 py-2 border-2 border-line rounded-lg font-bold text-center text-ink focus:border-accent focus:outline-none transition-colors"
                         min="0"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => updatePlayer(index, 'gamesWon', (parseInt(player.gamesWon || 0) + 1).toString())}
-                        className="w-10 h-10 bg-white border-2 border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                        className="w-10 h-10 bg-surface border-2 border-line rounded-lg font-bold text-ink hover:bg-surface-2 transition-colors"
                       >
                         +
                       </button>
@@ -279,7 +279,7 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
                   <button
                     type="button"
                     onClick={() => removePlayerRow(index)}
-                    className="px-4 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-auto"
+                    className="px-4 py-3 bg-danger-soft text-danger rounded-xl font-bold hover:brightness-110 transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-auto"
                     disabled={players.length === 1}
                   >
                     Remove
@@ -290,7 +290,7 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
                   placeholder="Notes (optional)"
                   value={player.notes}
                   onChange={(e) => updatePlayer(index, 'notes', e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-line rounded-xl font-semibold text-ink focus:border-accent focus:outline-none transition-colors"
                 />
               </div>
             ))}
@@ -298,7 +298,7 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
             <button
               type="button"
               onClick={addPlayerRow}
-              className="px-5 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
+              className="px-5 py-3 bg-surface-2 text-ink rounded-xl font-semibold hover:bg-line-strong transition-colors"
             >
               + Add Another Player
             </button>
@@ -315,14 +315,14 @@ const EditSessionModal = ({ session, locations, onClose, onSessionUpdated, playe
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-5 py-3 bg-accent text-accent-ink rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (isEditing ? 'Updating...' : 'Adding...') : (isEditing ? 'Update Session' : 'Add Session')}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
+              className="px-5 py-3 bg-surface-2 text-ink rounded-xl font-semibold hover:bg-line-strong transition-colors"
             >
               Cancel
             </button>

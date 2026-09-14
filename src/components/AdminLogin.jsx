@@ -21,10 +21,10 @@ const AdminLogin = ({ onLogin }) => {
 
   return (
     <div className="max-w-md mx-auto mt-12 px-4">
-      <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
+      <div className="bg-surface rounded-2xl shadow-lg border border-line overflow-hidden">
         <div className="p-8">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Admin Login</h2>
-          <p className="text-slate-600 mb-6">Only accessible if you can beat Wyatt 1v1.</p>
+          <h2 className="text-2xl font-bold text-ink mb-2">Admin Login</h2>
+          <p className="text-ink-2 mb-6">Only accessible if you can beat Wyatt 1v1.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
@@ -32,17 +32,17 @@ const AdminLogin = ({ onLogin }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password"
-              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 border-2 border-line rounded-xl font-semibold text-ink focus:border-accent focus:outline-none transition-colors"
               autoFocus
             />
 
             {error && (
-              <p className="text-red-600 text-sm font-semibold">{error}</p>
+              <p className="text-danger text-sm font-semibold">{error}</p>
             )}
 
             <button
               type="submit"
-              className="w-full px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+              className="w-full px-5 py-3 bg-accent text-accent-ink rounded-xl font-semibold hover:shadow-lg transition-all"
             >
               Login
             </button>

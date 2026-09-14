@@ -22,21 +22,21 @@ const EditLocationModal = ({ location, onClose, onSave }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl shadow-2xl max-w-md w-full"
+        className="bg-surface rounded-2xl shadow-2xl max-w-md w-full"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-200">
+        <div className="p-6 border-b border-line">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-900">
+            <h2 className="text-2xl font-bold text-ink">
               {isEditing ? 'Edit Location' : 'Add New Location'}
             </h2>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 text-2xl font-bold transition-colors"
+              className="text-ink-3 hover:text-ink text-2xl font-bold transition-colors"
             >
               ×
             </button>
@@ -46,7 +46,7 @@ const EditLocationModal = ({ location, onClose, onSave }) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Location Name */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700 uppercase tracking-wide">
+            <label className="block text-sm font-bold text-ink uppercase tracking-wide">
               Location Name
             </label>
             <input
@@ -54,7 +54,7 @@ const EditLocationModal = ({ location, onClose, onSave }) => {
               value={locationName}
               onChange={(e) => setLocationName(e.target.value)}
               placeholder="e.g., Main Gym, Court A"
-              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 border-2 border-line rounded-xl font-semibold text-ink focus:border-accent focus:outline-none transition-colors"
               required
               autoFocus
             />
@@ -64,14 +64,14 @@ const EditLocationModal = ({ location, onClose, onSave }) => {
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
-              className="flex-1 px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+              className="flex-1 px-5 py-3 bg-accent text-accent-ink rounded-xl font-semibold hover:shadow-lg transition-all"
             >
               {isEditing ? 'Save Changes' : 'Add Location'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors"
+              className="px-5 py-3 bg-surface-2 text-ink rounded-xl font-semibold hover:bg-line-strong transition-colors"
             >
               Cancel
             </button>

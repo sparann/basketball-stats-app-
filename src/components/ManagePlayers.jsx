@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import EditPlayerModal from './EditPlayerModal';
+import { useUI } from '../context/ui-context';
 
 const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
+  const { toast, confirm } = useUI();
   const [editingPlayer, setEditingPlayer] = useState(null);
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -37,17 +39,19 @@ const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
         setShowAddPlayer(false);
       } catch (error) {
         console.error('Error adding player:', error);
-        alert(`Failed to add player: ${error.message}`);
+        toast(`Couldn't add player: ${error.message}`, { type: 'error' });
       }
     }
   };
 
-  const handleDelete = (playerName) => {
-    if (window.confirm(`Are you sure you want to delete ${playerName}? This cannot be undone.`)) {
-      if (onDeletePlayer) {
-        onDeletePlayer(playerName);
-      }
-    }
+  const handleDelete = async (playerName) => {
+    const ok = await confirm({
+      title: `Remove ${playerName}?`,
+      message: 'They come off the standings and out of every session they played in. This cannot be undone.',
+      confirmLabel: 'Remove',
+      destructive: true
+    });
+    if (ok && onDeletePlayer) onDeletePlayer(playerName);
   };
 
   const getInitials = (name) => {
@@ -56,16 +60,16 @@ const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
-        <div className="p-6 border-b border-slate-200">
+      <div className="bg-surface rounded-2xl shadow-lg border border-line overflow-hidden">
+        <div className="p-6 border-b border-line">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">Manage Players</h2>
-              <p className="text-slate-600 mt-1">Edit player details and remove players</p>
+              <h2 className="text-2xl font-bold text-ink">Manage Players</h2>
+              <p className="text-ink-2 mt-1">Edit player details and remove players</p>
             </div>
             <button
               onClick={() => setShowAddPlayer(true)}
-              className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all"
+              className="px-5 py-2.5 bg-accent text-accent-ink rounded-xl font-semibold text-sm hover:shadow-lg transition-all"
             >
               + Add Player
             </button>
@@ -73,20 +77,20 @@ const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
         </div>
 
         {showAddPlayer && (
-          <div className="p-6 border-b border-slate-200 bg-slate-50">
-            <h3 className="text-lg font-bold text-slate-900 mb-3">Add New Player</h3>
+          <div className="p-6 border-b border-line bg-surface-2">
+            <h3 className="text-lg font-bold text-ink mb-3">Add New Player</h3>
             <div className="flex gap-3">
               <input
                 type="text"
                 value={newPlayerName}
                 onChange={(e) => setNewPlayerName(e.target.value)}
                 placeholder="Player name"
-                className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-xl font-semibold text-slate-700 focus:border-blue-500 focus:outline-none transition-colors"
+                className="flex-1 px-4 py-3 border-2 border-line rounded-xl font-semibold text-ink focus:border-accent focus:outline-none transition-colors"
                 autoFocus
               />
               <button
                 onClick={handleAddPlayer}
-                className="px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                className="px-5 py-3 bg-accent text-accent-ink rounded-xl font-semibold hover:shadow-lg transition-all"
               >
                 Add
               </button>
@@ -95,7 +99,7 @@ const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
                   setShowAddPlayer(false);
                   setNewPlayerName('');
                 }}
-                className="px-5 py-3 bg-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-300 transition-colors"
+                className="px-5 py-3 bg-line-strong text-ink rounded-xl font-semibold hover:bg-line-strong transition-colors"
               >
                 Cancel
               </button>
@@ -103,9 +107,9 @@ const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
           </div>
         )}
 
-        <div className="divide-y divide-slate-200">
+        <div className="divide-y divide-line">
           {players.map((player) => (
-            <div key={player.name} className="p-6 hover:bg-slate-50 transition-colors">
+            <div key={player.name} className="p-6 hover:bg-surface-2 transition-colors">
               <div className="flex items-center gap-4">
                 {/* Avatar */}
                 <div className="flex-shrink-0">
@@ -113,10 +117,10 @@ const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
                     <img
                       src={player.pictureUrl}
                       alt={player.name}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-slate-100"
+                      className="w-16 h-16 rounded-full object-cover border-2 border-line"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-xl font-bold border-2 border-slate-100">
+                    <div className="w-16 h-16 rounded-full bg-line-strong flex items-center justify-center text-ink-2 text-xl font-bold border-2 border-line">
                       {getInitials(player.name)}
                     </div>
                   )}
@@ -124,14 +128,14 @@ const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
 
                 {/* Player Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-slate-900">{player.name}</h3>
-                  <div className="flex gap-4 text-sm text-slate-600 mt-1">
-                    <span><strong className="text-slate-900">{player.totalGamesPlayed}</strong> games</span>
-                    <span><strong className="text-slate-900">{player.totalGamesWon}</strong> wins</span>
-                    <span><strong className="text-slate-900">{player.sessionsAttended}</strong> sessions</span>
+                  <h3 className="text-xl font-bold text-ink">{player.name}</h3>
+                  <div className="flex gap-4 text-sm text-ink-2 mt-1">
+                    <span><strong className="text-ink">{player.totalGamesPlayed}</strong> games</span>
+                    <span><strong className="text-ink">{player.totalGamesWon}</strong> wins</span>
+                    <span><strong className="text-ink">{player.sessionsAttended}</strong> sessions</span>
                   </div>
                   {player.injured && (
-                    <span className="inline-block mt-2 text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded-full">
+                    <span className="inline-block mt-2 text-xs font-semibold text-danger bg-danger-soft px-2 py-1 rounded-full">
                       Injured
                     </span>
                   )}
@@ -141,13 +145,13 @@ const ManagePlayers = ({ players, onUpdatePlayer, onDeletePlayer }) => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setEditingPlayer(player)}
-                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors"
+                    className="px-4 py-2 bg-surface-2 text-ink rounded-xl font-semibold text-sm hover:bg-line-strong transition-colors"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(player.name)}
-                    className="px-4 py-2 bg-red-600 text-white rounded-xl font-semibold text-sm hover:bg-red-700 transition-colors"
+                    className="px-4 py-2 bg-danger-soft text-danger rounded-xl font-semibold text-sm hover:brightness-110 transition-colors"
                   >
                     Delete
                   </button>

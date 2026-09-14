@@ -127,18 +127,26 @@ export const sortPlayers = (players, sortBy) => {
 };
 
 /**
+ * Parse a YYYY-MM-DD string as a local date.
+ * new Date('YYYY-MM-DD') parses as UTC midnight, which is the previous evening
+ * in US time zones, so every date comparison has to go through this.
+ * @param {string} dateString - Date in YYYY-MM-DD format
+ * @returns {Date|null} Local date, or null for empty input
+ */
+export const parseLocalDate = (dateString) => {
+  if (!dateString) return null;
+  const [year, month, day] = String(dateString).slice(0, 10).split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+/**
  * Format date string (timezone-safe)
  * @param {string} dateString - Date in YYYY-MM-DD format
  * @returns {string} Formatted date or N/A
  */
 export const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-
-  // Parse date components manually to avoid timezone conversion issues
-  const [year, month, day] = dateString.split('-').map(Number);
-
-  // Create date in local timezone (month is 0-indexed)
-  const date = new Date(year, month - 1, day);
+  const date = parseLocalDate(dateString);
+  if (!date) return 'N/A';
 
   return date.toLocaleDateString('en-US', {
     month: 'short',
@@ -153,8 +161,8 @@ export const formatDate = (dateString) => {
  * @returns {boolean} True if active
  */
 export const isPlayerActive = (lastPlayedDate) => {
-  if (!lastPlayedDate) return false;
-  const lastPlayed = new Date(lastPlayedDate);
+  const lastPlayed = parseLocalDate(lastPlayedDate);
+  if (!lastPlayed) return false;
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
   return lastPlayed >= fourteenDaysAgo;
@@ -202,4 +210,54 @@ export const categorizePlayersByStanding = (players, minimumGames) => {
   });
 
   return { active, needsMoreGames, inactive };
+};
+
+/**
+ * Everything the standings screens need in one call: the dynamic threshold,
+ * the three groups, and dense ranks for the active group.
+ * @param {Array} players - Player objects with aggregated stats
+ * @param {string} sortBy - 'winPercentage' | 'totalGames'
+ */
+export const computeStandings = (players, sortBy = 'winPercentage') => {
+  const minimumGames = calculateMinimumGamesThreshold(players);
+  const groups = categorizePlayersByStanding(players, minimumGames);
+  const active = sortPlayers(groups.active, sortBy);
+
+  let rank = 1;
+  const ranked = active.map((player, index) => {
+    if (index > 0) {
+      const previous = active[index - 1];
+      const tied = sortBy === 'winPercentage'
+        ? player.overallWinPercentage === previous.overallWinPercentage
+        : player.totalGamesPlayed === previous.totalGamesPlayed;
+      if (!tied) rank++;
+    }
+    return { ...player, rank };
+  });
+
+  return {
+    minimumGames,
+    active: ranked,
+    needsMoreGames: sortPlayers(groups.needsMoreGames, sortBy),
+    inactive: sortPlayers(groups.inactive, sortBy)
+  };
+};
+
+/** Total games in a session: the recorded total, or the most any one player played. */
+export const getSessionTotalGames = (session) =>
+  session.totalGames || Math.max(0, ...(session.players || []).map((p) => p.gamesPlayed));
+
+/**
+ * Session MVP(s): best win rate among players who played at least half the games.
+ * Returns an array because ties are common in a 10-game night.
+ */
+export const getSessionTopPerformers = (session) => {
+  const totalGames = getSessionTotalGames(session);
+  const eligible = (session.players || [])
+    .filter((p) => p.gamesPlayed >= totalGames * 0.5)
+    .map((p) => ({ ...p, winPercentage: calculateWinPercentage(p.gamesWon, p.gamesPlayed) }));
+
+  if (eligible.length === 0) return [];
+  const best = Math.max(...eligible.map((p) => p.winPercentage));
+  return eligible.filter((p) => p.winPercentage === best);
 };
