@@ -13,6 +13,7 @@ import Avatar from '../components/ui/Avatar';
 import Sparkline from '../components/ui/Sparkline';
 import Sheet from '../components/ui/Sheet';
 import Icon from '../components/ui/Icon';
+import { useActiveLiveSession } from '../components/LiveSession/useActiveLiveSession';
 
 const PERIODS = [
   ['week', 'This week'],
@@ -106,6 +107,7 @@ const OptionList = ({ options, value, onChange }) => (
 
 const StandingsPage = () => {
   const { players, sessions } = useData();
+  const live = useActiveLiveSession();
   const [period, setPeriod] = useState('allTime');
   const [sortBy, setSortBy] = useState('winPercentage');
   const [filterOpen, setFilterOpen] = useState(false);
@@ -137,6 +139,17 @@ const StandingsPage = () => {
     <div className="max-w-2xl mx-auto">
       <PageHeader
         title="Standings"
+        badge={
+          live.session && !live.isStale ? (
+            <Link
+              to="/live"
+              className="h-6 px-2.5 rounded-full border border-line-strong flex items-center gap-1.5 text-[11px] font-bold tracking-[0.1em] text-accent"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+              LIVE
+            </Link>
+          ) : null
+        }
         action={
           <button
             type="button"

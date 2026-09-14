@@ -10,6 +10,8 @@ import PlayerPage from './pages/PlayerPage';
 import SessionsPage from './pages/SessionsPage';
 import SessionPage from './pages/SessionPage';
 import AdminPage from './pages/AdminPage';
+import LiveSessionPage from './pages/LiveSessionPage';
+import LivePage from './pages/LivePage';
 
 const GATE_KEY = 'captchaCompletedTimestamp';
 const GATE_TTL = 24 * 60 * 60 * 1000; // once a day
@@ -45,6 +47,8 @@ const Shell = () => {
         <Route path="/sessions" element={<SessionsPage />} />
         <Route path="/sessions/:key" element={<SessionPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/live" element={<LiveSessionPage />} />
+        <Route path="/live" element={<LivePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <TabBar />

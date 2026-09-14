@@ -7,7 +7,8 @@ courtside. See README.md for setup and the data model.
 ## Commands
 
 - `npm run dev` — Vite on :5173. With `.env.local` flags it runs offline on sample data.
-- `npm run lint` — must stay at zero. CI runs lint and build on every PR.
+- `npm run lint` — must stay at zero. CI runs lint, tests and build on every PR.
+- `npm test` — vitest over `src/utils/*.test.js`. Add a case when you touch the math.
 - `npm run build`
 
 ## Architecture
@@ -19,10 +20,15 @@ courtside. See README.md for setup and the data model.
 - `UIProvider` gives `useUI()` with `toast(message, { type })` and
   `await confirm({ title, message, confirmLabel, destructive })`.
   **Never use `window.alert` or `window.confirm`.**
-- Routes: `/`, `/players/:name`, `/sessions`, `/sessions/:key`, `/admin`.
-  The live session is a full-screen takeover rendered inside `ManageSessions`
-  (z-40, above the tab bar); it does not have a route yet.
-- `LiveSessionContext` holds courtside state and talks to Supabase directly.
+- Routes: `/`, `/players/:name`, `/sessions`, `/sessions/:key`, `/admin`,
+  `/admin/live` (courtside, full-screen z-40 above the tab bar, `?session=` to
+  open one, `?end=1` to land on the summary), `/live` (read-only spectator).
+- `lib/liveSessionStore.js` is the only place courtside code touches storage.
+  With Supabase it uses live_sessions / live_session_players / games; without
+  it, localStorage. `LiveSessionContext` derives players, records and the
+  end-of-night summary from the game rows: no counters anywhere.
+- Team keys stay `team_a` / `team_b` in the database; `TEAM_LABELS` maps them
+  to Light / Dark for people. `TEAM_CAP` (5) lives in `utils/liveStats.js`.
 
 ## Design system
 
@@ -52,8 +58,8 @@ Tokens are Tailwind classes from `tailwind.config.js`:
   `lib/renamePlayer.js`, which rewrites sessions, live-session players and
   game rosters. Player ids are on the roadmap.
 - Two sessions can share a date. Always mutate sessions by `id`, never by date.
-- `live_session_players` holds counters that must be kept in step with
-  `games`; undo and record both write them. Deriving from `games` is on the roadmap.
+- `live_session_players` is just the roster now. Its counter columns are
+  unused and can be dropped in a later migration.
 - Parse `YYYY-MM-DD` with `parseLocalDate`, never `new Date(string)`.
 - Locations live in localStorage only, seeded from session rows.
 - Standings are built from the `players` table, so anyone who plays must have
