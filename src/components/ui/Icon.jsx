@@ -12,6 +12,8 @@ const PATHS = {
   undo: 'M3 7v6h6M3.5 13a9 9 0 1 0 2.2-6.4L3 7',
   pin: 'M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z',
   list: 'M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01',
+  rows: 'M4 6h16M4 12h16M4 18h16',
+  grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
   calendar: 'M3 10h18M8 3v4M16 3v4',
   lock: 'M8 11V7a4 4 0 0 1 8 0v4',
   search: 'M21 21l-4.3-4.3',
