@@ -32,7 +32,10 @@ const StartLiveSessionSheet = ({ onClose, onStarted }) => {
   const [location, setLocation] = useState(() => lastSession?.location || '');
   const [picked, setPicked] = useState(() => new Set());
   const [query, setQuery] = useState('');
+  const [guestCount, setGuestCount] = useState(0);
   const [starting, setStarting] = useState(false);
+
+  const headcount = picked.size + guestCount;
 
   const sorted = useMemo(
     () =>
@@ -61,10 +64,12 @@ const StartLiveSessionSheet = ({ onClose, onStarted }) => {
   };
 
   const start = async () => {
-    if (picked.size < MIN_PLAYERS) return;
+    if (headcount < MIN_PLAYERS) return;
     setStarting(true);
     try {
-      const session = await liveSessionStore.createSession({ date, location, names: [...picked] });
+      // Guests are per-night labels: no profile, never in the standings
+      const guests = Array.from({ length: guestCount }, (_, i) => `Guest ${i + 1}`);
+      const session = await liveSessionStore.createSession({ date, location, names: [...picked, ...guests] });
       onStarted(session);
     } catch (error) {
       toast(`Couldn't start the session: ${error.message}`, { type: 'error' });
@@ -101,8 +106,8 @@ const StartLiveSessionSheet = ({ onClose, onStarted }) => {
 
       <div className="flex items-center justify-between mt-4 mb-2">
         <span className="eyebrow">Who's here</span>
-        <span className={`text-xs font-semibold tabular ${picked.size >= MIN_PLAYERS ? 'text-accent' : 'text-ink-3'}`}>
-          {picked.size} picked{picked.size < MIN_PLAYERS ? ` · need ${MIN_PLAYERS}` : ''}
+        <span className={`text-xs font-semibold tabular ${headcount >= MIN_PLAYERS ? 'text-accent' : 'text-ink-3'}`}>
+          {headcount} tonight{headcount < MIN_PLAYERS ? ` · need ${MIN_PLAYERS}` : ''}
         </span>
       </div>
 
@@ -146,7 +151,35 @@ const StartLiveSessionSheet = ({ onClose, onStarted }) => {
         {shown.length === 0 && <p className="text-sm text-ink-2 py-4 text-center">No one matches. Add players from the Players tab first.</p>}
       </div>
 
-      <Button variant="primary" size="lg" className="w-full mt-4 font-display text-xl tracking-[0.04em]" disabled={picked.size < MIN_PLAYERS || starting} onClick={start}>
+      {/* Outsiders who are here tonight. Name them later from the court if you catch a name. */}
+      <div className="mt-4 flex items-center justify-between gap-3 h-14 px-4 rounded-xl bg-court border border-line">
+        <div className="min-w-0">
+          <div className="text-[15px] font-semibold text-ink">Guests</div>
+          <div className="text-xs text-ink-2 truncate">Not in the group. No names needed.</div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0" role="group" aria-label="Guests">
+          <button
+            type="button"
+            onClick={() => setGuestCount((n) => Math.max(0, n - 1))}
+            disabled={guestCount === 0}
+            aria-label="One fewer guest"
+            className="tap w-11 h-11 rounded-full bg-surface text-ink flex items-center justify-center disabled:opacity-40"
+          >
+            <Icon name="minus" size={18} />
+          </button>
+          <span className="display w-8 text-center text-2xl text-ink tabular">{guestCount}</span>
+          <button
+            type="button"
+            onClick={() => setGuestCount((n) => n + 1)}
+            aria-label="One more guest"
+            className="tap w-11 h-11 rounded-full bg-surface text-ink flex items-center justify-center"
+          >
+            <Icon name="plus" size={18} />
+          </button>
+        </div>
+      </div>
+
+      <Button variant="primary" size="lg" className="w-full mt-4 font-display text-xl tracking-[0.04em]" disabled={headcount < MIN_PLAYERS || starting} onClick={start}>
         {starting ? 'STARTING…' : 'START SESSION'}
       </Button>
     </Sheet>

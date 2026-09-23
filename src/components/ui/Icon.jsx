@@ -6,6 +6,7 @@ const PATHS = {
   chevronRight: 'M9 18l6-6-6-6',
   x: 'M18 6L6 18M6 6l12 12',
   plus: 'M12 5v14M5 12h14',
+  minus: 'M5 12h14',
   check: 'M5 12l5 5L20 7',
   info: 'M12 16v-4M12 8h.01',
   more: '',
