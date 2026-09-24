@@ -4,6 +4,7 @@ import { formatDate, formatWinPercentage, getSessionTotalGames, getSessionTopPer
 import { shortName } from '../utils/names';
 import PageHeader from '../components/ui/PageHeader';
 import Icon from '../components/ui/Icon';
+import LiveBadge from '../components/ui/LiveBadge';
 
 const sessionKey = (session) => String(session.id || session.date);
 
@@ -14,7 +15,7 @@ const SessionsPage = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <PageHeader title="Sessions" />
+      <PageHeader title="Sessions" badge={<LiveBadge />} />
 
       <div className="px-5 pt-3 pb-2 flex items-center justify-between">
         <span className="eyebrow">History</span>

@@ -28,11 +28,15 @@ const IconButton = ({ icon, label, onClick }) => (
   </button>
 );
 
-const TeamCard = ({ team, players, record, allNames, onGuestTap }) => (
-  <section className="bg-surface rounded-2xl px-3 pt-2.5 pb-1.5">
+const TeamCard = ({ team, players, record, allNames, onGuestTap, live }) => (
+  <section className={`bg-surface rounded-2xl px-3 pt-2.5 pb-1.5 ${live ? 'ring-1 ring-accent/40' : ''}`}>
     <div className="flex items-center justify-between pb-1.5 border-b border-line">
       <TeamPill team={team} />
       <span className="display text-lg text-ink">{record.wins}–{record.losses}</span>
+    </div>
+    <div className={`flex items-center gap-1.5 pt-1.5 text-[10px] font-bold tracking-[0.1em] ${live ? 'text-accent' : 'text-ink-3'}`}>
+      {live && <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />}
+      {live ? 'ON COURT' : 'NEXT UP'}
     </div>
     <ul>
       {players.map((p) => {
@@ -98,9 +102,30 @@ const useWakeLock = () => {
   }, []);
 };
 
+/** m:ss since a moment, ticking every second while `running`. */
+const useGameClock = (since, running) => {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!running) return undefined;
+    const first = window.setTimeout(() => setNow(Date.now()), 0);
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(id);
+    };
+  }, [running, since]);
+  if (!running || !since) return null;
+  const start = new Date(since).getTime();
+  if (Number.isNaN(start)) return null;
+  const secs = Math.max(0, Math.floor((now - start) / 1000));
+  return `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+};
+
 /**
  * The court screen. Teams and bench up top, the two winner buttons under the
  * thumb. After a result the buttons give way to Next Game / Reshoot / End.
+ * The header says which state you are in: a pulsing LIVE with a game clock
+ * while a game is on, FINAL with the winner between games.
  */
 const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
   const { session, teams, allPlayers, roster, games, gameNumber, isSaving, actions } = useLiveSession();
@@ -123,6 +148,10 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
   const noBench = teams.bench.length === 0;
   const streakTeam = TEAMS.find((t) => winStreak(games, t) >= 2);
   const streak = streakTeam ? winStreak(games, streakTeam) : 0;
+
+  const isLive = phase === 'playing' && teamsAreSet && !showSetup;
+  const gameSince = games.length > 0 ? games[games.length - 1].played_at : session?.started_at || session?.created_at;
+  const clock = useGameClock(gameSince, isLive);
 
   const handleWinner = async (team) => {
     try {
@@ -212,12 +241,32 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
         <button type="button" onClick={handlePause} className="tap px-2 text-[15px] font-medium text-ink-2">
           Pause
         </button>
-        <div className="text-center">
-          <div className="display text-[26px] leading-none text-ink font-extrabold">GAME {gameNumber}</div>
-          <div className="text-[11px] text-ink-2 mt-0.5">
-            {formatDate(session.date)}
-            {session.location ? ` · ${session.location}` : ''}
-          </div>
+        <div className="text-center min-w-0">
+          {isLive ? (
+            <>
+              <div className="flex items-center justify-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                <span className="display text-[26px] leading-none text-ink font-extrabold">GAME {gameNumber}</span>
+              </div>
+              <div className="text-[11px] font-semibold text-accent tabular mt-0.5">
+                LIVE{clock ? ` · ${clock}` : ''}
+                {session.location ? <span className="text-ink-2 font-normal"> · {session.location}</span> : null}
+              </div>
+            </>
+          ) : lastResult && phase === 'between' ? (
+            <>
+              <div className="display text-[26px] leading-none text-ink font-extrabold">GAME {lastResult.gameNumber} · FINAL</div>
+              <div className="text-[11px] text-ink-2 mt-0.5">{TEAM_LABELS[lastResult.winner]} won · next up game {gameNumber}</div>
+            </>
+          ) : (
+            <>
+              <div className="display text-[26px] leading-none text-ink font-extrabold">GAME {gameNumber}</div>
+              <div className="text-[11px] text-ink-2 mt-0.5">
+                {formatDate(session.date)}
+                {session.location ? ` · ${session.location}` : ''}
+              </div>
+            </>
+          )}
         </div>
         <div className="flex gap-1.5">
           {games.length > 0 && <IconButton icon="undo" label="Undo last game" onClick={handleUndo} />}
@@ -225,7 +274,7 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
         </div>
       </header>
 
-      {streak >= 2 && (
+      {streak >= 2 && isLive && (
         <p className="text-center text-xs font-semibold text-accent">
           {TEAM_LABELS[streakTeam]} has won {streak} straight
         </p>
@@ -233,8 +282,8 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
 
       <main className="flex-1 overflow-y-auto px-4 pt-3 pb-3">
         <div className="grid grid-cols-2 gap-3">
-          <TeamCard team="team_a" players={teams.teamA} record={teamRecord(games, 'team_a')} allNames={allNames} onGuestTap={setGuestSheet} />
-          <TeamCard team="team_b" players={teams.teamB} record={teamRecord(games, 'team_b')} allNames={allNames} onGuestTap={setGuestSheet} />
+          <TeamCard team="team_a" players={teams.teamA} record={teamRecord(games, 'team_a')} allNames={allNames} onGuestTap={setGuestSheet} live={isLive} />
+          <TeamCard team="team_b" players={teams.teamB} record={teamRecord(games, 'team_b')} allNames={allNames} onGuestTap={setGuestSheet} live={isLive} />
         </div>
 
         <section className="mt-4">
