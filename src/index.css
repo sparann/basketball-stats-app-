@@ -20,6 +20,7 @@
     --accent-ink: 27 23 20;
     --danger: 234 122 99;
     --danger-soft: 61 36 31;
+    --glow: 0.2;
   }
 
   /* Light: warm off-white ground, same accent hue pulled darker for contrast. */
@@ -39,6 +40,7 @@
     --accent-ink: 255 255 255;
     --danger: 183 66 46;
     --danger-soft: 248 225 220;
+    --glow: 0.22;
   }
 
   html {
@@ -70,5 +72,34 @@
   /* 44px minimum tap target for anything a thumb hits */
   .tap {
     @apply min-h-tap;
+  }
+
+  /* Court screen background while a game is live: fades in and out */
+  .court-glow-fade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 900ms ease;
+  }
+
+  /* Two soft accent pools, top and bottom, breathing slowly */
+  .court-glow {
+    position: absolute;
+    inset: -10%;
+    background:
+      radial-gradient(70% 45% at 50% 0%, rgb(var(--accent) / var(--glow)), transparent 70%),
+      radial-gradient(60% 40% at 50% 100%, rgb(var(--accent) / calc(var(--glow) * 0.7)), transparent 70%);
+    animation: court-breathe 7s ease-in-out infinite;
+    will-change: opacity, transform;
+  }
+
+  @keyframes court-breathe {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .court-glow { animation: none; opacity: 0.85; }
+    .court-glow-fade { transition: none; }
   }
 }

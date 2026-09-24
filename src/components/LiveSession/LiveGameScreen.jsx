@@ -236,8 +236,13 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
       : `Saved · ${gamesLabel} synced`;
 
   return (
-    <div className="fixed inset-0 z-40 bg-court flex flex-col">
-      <header className="shrink-0 px-3 pt-[calc(env(safe-area-inset-top)+6px)] h-[calc(env(safe-area-inset-top)+58px)] flex items-center justify-between">
+    <div className="fixed inset-0 z-40 bg-court flex flex-col overflow-hidden">
+      {/* Warm glow that breathes while a game is on, and fades out between games */}
+      <div aria-hidden="true" className={`court-glow-fade ${isLive ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="court-glow" />
+      </div>
+
+      <header className="relative shrink-0 px-3 pt-[calc(env(safe-area-inset-top)+6px)] h-[calc(env(safe-area-inset-top)+58px)] flex items-center justify-between">
         <button type="button" onClick={handlePause} className="tap px-2 text-[15px] font-medium text-ink-2">
           Pause
         </button>
@@ -275,12 +280,12 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
       </header>
 
       {streak >= 2 && isLive && (
-        <p className="text-center text-xs font-semibold text-accent">
+        <p className="relative text-center text-xs font-semibold text-accent">
           {TEAM_LABELS[streakTeam]} has won {streak} straight
         </p>
       )}
 
-      <main className="flex-1 overflow-y-auto px-4 pt-3 pb-3">
+      <main className="relative flex-1 overflow-y-auto px-4 pt-3 pb-3">
         <div className="grid grid-cols-2 gap-3">
           <TeamCard team="team_a" players={teams.teamA} record={teamRecord(games, 'team_a')} allNames={allNames} onGuestTap={setGuestSheet} live={isLive} />
           <TeamCard team="team_b" players={teams.teamB} record={teamRecord(games, 'team_b')} allNames={allNames} onGuestTap={setGuestSheet} live={isLive} />
@@ -342,7 +347,7 @@ const LiveGameScreen = ({ onExit, startWithEnd = false }) => {
         </button>
       </main>
 
-      <footer className="shrink-0 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+      <footer className="relative shrink-0 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
         <p className="text-center text-[11px] text-ink-3 mb-2.5">{syncLabel}</p>
         {phase === 'playing' || !lastResult ? (
           <div className="grid grid-cols-2 gap-3">
