@@ -12,6 +12,8 @@ games as they happen. Built for phones. Live at https://sparan.vercel.app.
 - **Player pages.** Win rate, last ten sessions, best teammate, best court,
   full history.
 - **Sessions.** Every night played, with the MVP for each.
+- **Guests.** Outsiders are added with one tap, no names needed. They stay out
+  of the standings; a Guests card at the bottom adds them all up.
 - **Admin.** Password-gated. Add or edit sessions by hand, manage players and
   courts, and run a **live session**: pick Light and Dark, tap the winner
   after each game, rotate the bench, end the night and it saves to the

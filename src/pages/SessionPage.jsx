@@ -94,13 +94,13 @@ const SessionPage = () => {
         const full = players.find((x) => x.name === p.name);
         const isMvp = mvpNames.has(p.name);
         const guest = isGuest(p);
-        const Row = guest ? 'div' : Link;
-        const rowProps = guest ? {} : { to: `/players/${encodeURIComponent(p.name)}` };
+        const Row = Link;
+        const rowProps = { to: guest ? '/guests' : `/players/${encodeURIComponent(p.name)}` };
         return (
           <Row
             key={p.name}
             {...rowProps}
-            className={`flex items-center gap-3 h-[60px] px-5 border-t border-line ${guest ? '' : 'active:bg-surface-raised'}`}
+            className="flex items-center gap-3 h-[60px] px-5 border-t border-line active:bg-surface-raised"
           >
             <div className={`display w-[26px] text-[22px] leading-none ${isMvp ? 'text-accent' : 'text-ink-3'}`}>{p.rank}</div>
             <Avatar name={p.name} pictureUrl={full?.pictureUrl} size={36} />

@@ -22,7 +22,8 @@ courtside. See README.md for setup and the data model.
   **Never use `window.alert` or `window.confirm`.**
 - Routes: `/`, `/players/:name`, `/sessions`, `/sessions/:key`, `/admin`,
   `/admin/live` (courtside, full-screen z-40 above the tab bar, `?session=` to
-  open one, `?end=1` to land on the summary), `/live` (read-only spectator).
+  open one, `?end=1` to land on the summary), `/live` (read-only spectator),
+  `/guests` (all guests added up).
 - `lib/liveSessionStore.js` is the only place courtside code touches storage.
   With Supabase it uses live_sessions / live_session_players / games; without
   it, localStorage. `LiveSessionContext` derives players, records and the
@@ -61,7 +62,9 @@ them a regular. `utils/guests.js` is the rule: anyone named "Guest …" or
 players row, never appear in standings or the games-minimum average, are not
 MVP-eligible, are skipped by teammate insights, and have no profile page. The
 old Random 1/2/3 profiles are guests by that rule; never delete them, their
-games are in real sessions.
+games are in real sessions. `aggregateGuests(sessions)` adds every guest line
+into one unranked record: the Guests card at the bottom of Standings (same
+period filter) and the `/guests` page, night by night.
 
 ## Data gotchas
 

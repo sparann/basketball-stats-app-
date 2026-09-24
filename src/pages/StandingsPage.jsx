@@ -10,7 +10,8 @@ import {
   parseLocalDate
 } from '../utils/calculations';
 import { shortName } from '../utils/names';
-import { isGuest, onlyRegulars } from '../utils/guests';
+import { aggregateGuests, isGuest, onlyRegulars } from '../utils/guests';
+import { GuestsCard, GuestsRow } from '../components/GuestsSummary';
 import PageHeader from '../components/ui/PageHeader';
 import Avatar from '../components/ui/Avatar';
 import Sparkline from '../components/ui/Sparkline';
@@ -208,6 +209,10 @@ const StandingsPage = () => {
   }, [players, regulars, sessions, period]);
 
   const standings = useMemo(() => computeStandings(scopedPlayers, sortBy), [scopedPlayers, sortBy]);
+  const guestTotals = useMemo(
+    () => aggregateGuests(period === 'allTime' ? sessions : filterSessionsByPeriod(sessions, period)),
+    [sessions, period]
+  );
   const allNames = useMemo(() => scopedPlayers.map((p) => p.name), [scopedPlayers]);
   const periodLabel = PERIODS.find(([key]) => key === period)[1];
   const toggleGroup = (key) => setOpenGroups((g) => ({ ...g, [key]: !g[key] }));
@@ -272,6 +277,22 @@ const StandingsPage = () => {
         <>
           <GroupToggle label="Inactive" count={standings.inactive.length} open={openGroups.inactive} onToggle={() => toggleGroup('inactive')} />
           {openGroups.inactive && renderGroup(standings.inactive, false)}
+        </>
+      )}
+
+      {guestTotals.gamesPlayed > 0 && (
+        <>
+          <div className="flex items-center justify-between h-11 px-5 border-t border-line">
+            <span className="eyebrow">Guests</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-3">Not ranked</span>
+          </div>
+          {view === 'cards' ? (
+            <div className="px-5 pb-3">
+              <GuestsCard totals={guestTotals} />
+            </div>
+          ) : (
+            <GuestsRow totals={guestTotals} />
+          )}
         </>
       )}
 

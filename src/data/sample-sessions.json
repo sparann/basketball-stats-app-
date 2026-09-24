@@ -77,6 +77,18 @@
           "gamesPlayed": 8,
           "gamesWon": 2,
           "notes": ""
+        },
+        {
+          "name": "Random 1",
+          "gamesPlayed": 5,
+          "gamesWon": 0,
+          "notes": ""
+        },
+        {
+          "name": "Random 2",
+          "gamesPlayed": 3,
+          "gamesWon": 3,
+          "notes": ""
         }
       ]
     },
@@ -150,6 +162,18 @@
           "name": "Owen Price",
           "gamesPlayed": 9,
           "gamesWon": 4,
+          "notes": ""
+        },
+        {
+          "name": "Random 1",
+          "gamesPlayed": 6,
+          "gamesWon": 3,
+          "notes": ""
+        },
+        {
+          "name": "Random 2",
+          "gamesPlayed": 7,
+          "gamesWon": 2,
           "notes": ""
         }
       ]
@@ -287,6 +311,12 @@
           "gamesPlayed": 5,
           "gamesWon": 2,
           "notes": ""
+        },
+        {
+          "name": "Random 1",
+          "gamesPlayed": 4,
+          "gamesWon": 2,
+          "notes": ""
         }
       ]
     },
@@ -360,6 +390,18 @@
           "name": "Ben Clark",
           "gamesPlayed": 12,
           "gamesWon": 8,
+          "notes": ""
+        },
+        {
+          "name": "Random 1",
+          "gamesPlayed": 4,
+          "gamesWon": 1,
+          "notes": ""
+        },
+        {
+          "name": "Random 2",
+          "gamesPlayed": 6,
+          "gamesWon": 1,
           "notes": ""
         }
       ]
@@ -509,6 +551,18 @@
           "gamesPlayed": 11,
           "gamesWon": 6,
           "notes": ""
+        },
+        {
+          "name": "Guest 1",
+          "gamesPlayed": 3,
+          "gamesWon": 2,
+          "notes": ""
+        },
+        {
+          "name": "Guest 2",
+          "gamesPlayed": 5,
+          "gamesWon": 4,
+          "notes": ""
         }
       ]
     },
@@ -570,6 +624,18 @@
           "name": "Owen Price",
           "gamesPlayed": 7,
           "gamesWon": 0,
+          "notes": ""
+        },
+        {
+          "name": "Guest 1",
+          "gamesPlayed": 6,
+          "gamesWon": 2,
+          "notes": ""
+        },
+        {
+          "name": "Guest 2",
+          "gamesPlayed": 3,
+          "gamesWon": 1,
           "notes": ""
         }
       ]
@@ -701,6 +767,18 @@
           "gamesPlayed": 7,
           "gamesWon": 5,
           "notes": ""
+        },
+        {
+          "name": "Guest 1",
+          "gamesPlayed": 4,
+          "gamesWon": 3,
+          "notes": ""
+        },
+        {
+          "name": "Guest 2",
+          "gamesPlayed": 4,
+          "gamesWon": 1,
+          "notes": ""
         }
       ]
     },
@@ -762,6 +840,12 @@
           "name": "Tanner Bell",
           "gamesPlayed": 10,
           "gamesWon": 6,
+          "notes": ""
+        },
+        {
+          "name": "Guest 1",
+          "gamesPlayed": 6,
+          "gamesWon": 2,
           "notes": ""
         }
       ]
@@ -911,6 +995,18 @@
           "gamesPlayed": 7,
           "gamesWon": 4,
           "notes": ""
+        },
+        {
+          "name": "Guest 1",
+          "gamesPlayed": 5,
+          "gamesWon": 1,
+          "notes": ""
+        },
+        {
+          "name": "Guest 2",
+          "gamesPlayed": 3,
+          "gamesWon": 2,
+          "notes": ""
         }
       ]
     },
@@ -978,6 +1074,18 @@
           "name": "Isaac Cho",
           "gamesPlayed": 7,
           "gamesWon": 4,
+          "notes": ""
+        },
+        {
+          "name": "Guest 1",
+          "gamesPlayed": 7,
+          "gamesWon": 3,
+          "notes": ""
+        },
+        {
+          "name": "Guest 2",
+          "gamesPlayed": 7,
+          "gamesWon": 2,
           "notes": ""
         }
       ]

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isGuest, nextGuestName, onlyRegulars } from './guests';
+import { aggregateGuests, isGuest, nextGuestName, onlyRegulars } from './guests';
 import { shortName } from './names';
 import { getSessionTopPerformers } from './calculations';
 
@@ -41,5 +41,47 @@ describe('guests elsewhere', () => {
       ]
     };
     expect(getSessionTopPerformers(session).map((p) => p.name)).toEqual(['Wyatt']);
+  });
+});
+
+describe('aggregateGuests', () => {
+  const sessions = [
+    {
+      id: 's2',
+      date: '2026-09-12',
+      location: 'Provo Rec Center',
+      players: [
+        { name: 'Wyatt', gamesPlayed: 8, gamesWon: 6 },
+        { name: 'Guest 1', gamesPlayed: 5, gamesWon: 2 },
+        { name: 'Guest 2', gamesPlayed: 3, gamesWon: 3 }
+      ]
+    },
+    { id: 's3', date: '2026-09-19', players: [{ name: 'Wyatt', gamesPlayed: 8, gamesWon: 4 }] },
+    {
+      id: 's1',
+      date: '2026-09-05',
+      players: [
+        { name: 'Random 1', gamesPlayed: 4, gamesWon: 1 },
+        { name: 'Dev', gamesPlayed: 4, gamesWon: 3, guest: true }
+      ]
+    }
+  ];
+
+  it('adds up every guest line and skips nights without guests', () => {
+    const totals = aggregateGuests(sessions);
+    expect(totals).toMatchObject({ gamesPlayed: 16, gamesWon: 9, appearances: 4 });
+    expect(totals.winPercentage).toBeCloseTo(9 / 16);
+    expect(totals.nights.map((n) => n.key)).toEqual(['s1', 's2']);
+  });
+
+  it('keeps each night separate, oldest first', () => {
+    const [first, second] = aggregateGuests(sessions).nights;
+    expect(first).toMatchObject({ date: '2026-09-05', gamesPlayed: 8, gamesWon: 4 });
+    expect(second.guests.map((g) => g.name)).toEqual(['Guest 1', 'Guest 2']);
+    expect(second.winPercentage).toBeCloseTo(5 / 8);
+  });
+
+  it('is empty with no sessions', () => {
+    expect(aggregateGuests([])).toMatchObject({ gamesPlayed: 0, appearances: 0, nights: [] });
   });
 });

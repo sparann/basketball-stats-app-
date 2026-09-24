@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../context/data-context';
 import { useUI } from '../context/ui-context';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -149,6 +149,11 @@ const PlayerPage = () => {
             ? `${playerName} is a guest slot: different people on different nights, so there is no profile.`
             : `No player named ${playerName}.`}
         </p>
+        {isGuest(playerName) && (
+          <Link to="/guests" className="inline-block mt-3 text-sm font-semibold text-accent">
+            See all guests added up
+          </Link>
+        )}
       </div>
     );
   }
